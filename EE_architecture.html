@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E/E Architecture & SDV Reference — Sahana N</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── EXACT DESIGN TOKENS FROM INDEX.HTML ── */
+    :root {
+      --bg:          #f0ede6;
+      --bg-card:     #faf8f4;
+      --bg-card-alt: #eef2ec;
+      --border:      #d6d0c4;
+      --border-card: #c8c2b6;
+      --text-primary:   #1a1a18;
+      --text-secondary: #4a4843;
+      --text-muted:     #7a756e;
+      --accent-green:   #2d6a4f;
+      --accent-sage:    #52796f;
+      --tag-protocol-bg:  #d4e6df;
+      --tag-protocol-txt: #1f4d3d;
+      --tag-ml-bg:        #e4dff5;
+      --tag-ml-txt:       #3d2d6b;
+      --tag-infra-bg:     #f5ead4;
+      --tag-infra-txt:    #6b4a1a;
+      --status-complete-bg:  #d4ede1;
+      --status-complete-txt: #1a5c38;
+      --status-progress-bg:  #fdefd4;
+      --status-progress-txt: #7a4a10;
+      --shadow-card: 0 2px 8px rgba(45,45,40,0.08), 0 8px 32px rgba(45,45,40,0.05);
+      --shadow-card-hover: 0 4px 16px rgba(45,45,40,0.12), 0 16px 48px rgba(45,45,40,0.08);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV — identical to index.html ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(240,237,230,0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem; color: var(--text-primary);
+      letter-spacing: 0.01em; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a {
+      font-size: 0.82rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-secondary); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--accent-green); }
+
+    /* ── HERO ── */
+    .hero { max-width: 860px; margin: 0 auto; padding: 80px 40px 64px; }
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent-sage); margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hero-eyebrow::before {
+      content: ''; display: inline-block;
+      width: 28px; height: 1.5px; background: var(--accent-sage);
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      line-height: 1.08; letter-spacing: -0.02em;
+      color: var(--text-primary); margin-bottom: 10px;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent-green); }
+    .hero-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem; color: var(--text-muted);
+      letter-spacing: 0.05em; margin-bottom: 32px;
+    }
+    .hero-divider {
+      width: 56px; height: 2px; background: var(--accent-green);
+      margin-bottom: 28px; border-radius: 2px;
+    }
+    .hero p { font-size: 1.05rem; font-weight: 300; color: var(--text-secondary); max-width: 700px; line-height: 1.75; }
+    .hero p strong { font-weight: 600; color: var(--text-primary); }
+
+    /* ── SECTION LAYOUT ── */
+    .section-wrap { max-width: 1100px; margin: 0 auto; padding: 0 40px 80px; }
+    .section-header {
+      display: flex; align-items: baseline; gap: 16px;
+      margin-bottom: 40px; padding-bottom: 16px;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted);
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif; font-size: 2rem;
+      color: var(--text-primary); letter-spacing: -0.01em;
+    }
+
+    /* ── TAGS — identical to index.html ── */
+    .tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 500;
+      padding: 4px 9px; border-radius: 6px; letter-spacing: 0.04em;
+    }
+    .tag-protocol { background: var(--tag-protocol-bg); color: var(--tag-protocol-txt); }
+    .tag-ml       { background: var(--tag-ml-bg);       color: var(--tag-ml-txt); }
+    .tag-infra    { background: var(--tag-infra-bg);     color: var(--tag-infra-txt); }
+
+    /* ── CALLOUT ── */
+    .callout {
+      background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: 12px; padding: 18px 22px; margin-bottom: 32px;
+      display: flex; gap: 14px; align-items: flex-start;
+      font-size: 0.88rem; color: var(--text-secondary); line-height: 1.65;
+      box-shadow: var(--shadow-card);
+    }
+    .callout-icon { color: var(--accent-sage); flex-shrink: 0; margin-top: 1px; font-size: 14px; }
+    .callout strong { color: var(--text-primary); font-weight: 600; }
+    .callout-green { border-left: 3px solid var(--accent-green); }
+    .callout-sage  { border-left: 3px solid var(--accent-sage); }
+
+    /* ════════════════ 01. EVOLUTION ════════════════ */
+    .evo-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border: 1.5px solid var(--border-card); border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .evo-card {
+      background: var(--bg-card); padding: 24px 20px;
+      cursor: pointer; border-right: 1px solid var(--border);
+      transition: background 0.2s; position: relative;
+    }
+    .evo-card:last-child { border-right: none; }
+    .evo-card:hover { background: #f2efe8; }
+    .evo-card.active { background: var(--bg-card-alt); }
+    .evo-card.active::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .evo-card[data-era="0"].active::before { background: var(--border-card); }
+    .evo-card[data-era="1"].active::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-sage)); }
+    .evo-card[data-era="2"].active::before { background: var(--accent-sage); }
+    .evo-card[data-era="3"].active::before { background: var(--accent-green); }
+
+    .evo-era {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+    }
+    .evo-title {
+      font-family: 'DM Serif Display', serif; font-size: 1.05rem;
+      color: var(--text-primary); line-height: 1.25; margin-bottom: 6px;
+    }
+    .evo-years { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
+    .evo-chevron {
+      position: absolute; bottom: 12px; right: 14px;
+      font-size: 11px; color: var(--text-muted); transition: transform 0.2s;
+    }
+    .evo-card.active .evo-chevron { transform: rotate(180deg); color: var(--accent-green); }
+
+    .evo-detail {
+      display: none; background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: 12px; margin-top: 2px; padding: 32px;
+      box-shadow: var(--shadow-card); animation: fadeSlide 0.22s ease;
+    }
+    .evo-detail.show { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+    .evo-col h4 {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-sage);
+      margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+    .evo-col ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .evo-col li { font-size: 0.87rem; font-weight: 300; color: var(--text-secondary); line-height: 1.5; }
+    .evo-col li::before { content: '→ '; color: var(--accent-green); font-size: 0.75rem; }
+    .evo-arch-chip {
+      display: inline-block; margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.63rem;
+      padding: 4px 10px; border-radius: 6px;
+      background: var(--tag-protocol-bg); color: var(--tag-protocol-txt);
+    }
+
+    /* ════════════════ 02. PROTOCOL STACK ════════════════ */
+    .proto-stack {
+      background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .proto-layer {
+      display: grid; grid-template-columns: 168px 1fr;
+      border-bottom: 1px solid var(--border); transition: background 0.15s;
+    }
+    .proto-layer:last-child { border-bottom: none; }
+    .proto-layer:hover { background: rgba(45,106,79,0.025); }
+    .proto-layer-label {
+      padding: 18px 20px; border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .proto-layer-name {
+      font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--text-primary); margin-bottom: 3px;
+    }
+    .proto-layer-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.63rem; color: var(--text-muted); letter-spacing: 0.06em; }
+    .proto-layer-content { padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    /* left accent per layer */
+    .layer-cloud  .proto-layer-label { border-left: 3px solid var(--accent-green); }
+    .layer-diag   .proto-layer-label { border-left: 3px solid var(--accent-sage); }
+    .layer-mw     .proto-layer-label { border-left: 3px solid #9c7a4a; }
+    .layer-eth    .proto-layer-label { border-left: 3px solid #6b5aa8; }
+    .layer-bus    .proto-layer-label { border-left: 3px solid #b06030; }
+    .layer-sensor .proto-layer-label { border-left: 3px solid #4a7c5e; }
+
+    /* tooltips */
+    .proto-badge { position: relative; cursor: default; }
+    .proto-badge:hover .proto-tip { display: block; }
+    .proto-tip {
+      display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%); background: var(--text-primary); color: var(--bg);
+      border-radius: 8px; padding: 10px 14px; width: 220px; z-index: 50;
+      font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 400;
+      line-height: 1.55; white-space: normal; pointer-events: none;
+      box-shadow: 0 8px 24px rgba(45,45,40,0.18);
+    }
+    .proto-tip::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: var(--text-primary);
+    }
+
+    /* ════════════════ 03. ARCH DIAGRAM ════════════════ */
+    .arch-diagram {
+      background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .arch-hdr {
+      padding: 18px 28px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .arch-hdr-title {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+    }
+    .arch-legend { display: flex; flex-wrap: wrap; gap: 14px; }
+    .arch-legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+      color: var(--text-muted); letter-spacing: 0.06em;
+    }
+    .arch-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .arch-body { padding: 20px; display: flex; flex-direction: column; gap: 3px; }
+    .arch-layer { border-radius: 10px; border: 1.5px solid; overflow: hidden; }
+    .arch-layer-hdr {
+      padding: 9px 16px; border-bottom: 1px solid;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .arch-layer-name {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .arch-layer-proto {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em; opacity: 0.7;
+    }
+    .arch-nodes { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 7px; }
+    .arch-node {
+      font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+      padding: 5px 11px; border-radius: 8px; border: 1px solid;
+      transition: transform 0.15s; cursor: default; position: relative;
+    }
+    .arch-node:hover { transform: translateY(-1px); }
+    .arch-node.proj { border-width: 2px; font-weight: 600; }
+    .proj-badge {
+      position: absolute; top: -9px; right: -5px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; font-weight: 500;
+      padding: 1px 5px; border-radius: 4px; background: var(--accent-green); color: #fff;
+    }
+    .arch-conn {
+      text-align: center; padding: 5px 0;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--text-muted);
+      letter-spacing: 0.06em; display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .arch-conn::before, .arch-conn::after {
+      content: ''; flex: 1; height: 1px; background: var(--border); max-width: 100px;
+    }
+
+    /* layer colour themes — all within parchment palette */
+    .lyr-cloud { border-color: #a8ccbc; }
+    .lyr-cloud .arch-layer-hdr { background: #e4f0ea; border-color: #a8ccbc; }
+    .lyr-cloud .arch-layer-name { color: var(--accent-green); }
+    .node-cloud { background: #eaf3ef; color: var(--tag-protocol-txt); border-color: #a8ccbc; }
+
+    .lyr-ota { border-color: #b0cabb; }
+    .lyr-ota .arch-layer-hdr { background: #e8f2ed; border-color: #b0cabb; }
+    .lyr-ota .arch-layer-name { color: #1c5a3c; }
+    .node-ota { background: #edf5f1; color: #1c5a3c; border-color: #b0cabb; }
+
+    .lyr-gw { border-color: var(--border-card); }
+    .lyr-gw .arch-layer-hdr { background: #f5f2ec; border-color: var(--border-card); }
+    .lyr-gw .arch-layer-name { color: var(--text-secondary); }
+    .node-gw { background: var(--bg-card); color: var(--text-secondary); border-color: var(--border-card); }
+
+    .lyr-dm { border-color: #c4b8e0; }
+    .lyr-dm .arch-layer-hdr { background: #ede8f5; border-color: #c4b8e0; }
+    .lyr-dm .arch-layer-name { color: #4a3880; }
+    .node-dm { background: #f2eef9; color: #4a3880; border-color: #c4b8e0; }
+
+    .lyr-sec { border-color: #d4c2a0; }
+    .lyr-sec .arch-layer-hdr { background: #f5edd8; border-color: #d4c2a0; }
+    .lyr-sec .arch-layer-name { color: var(--tag-infra-txt); }
+    .node-sec { background: #faf3e4; color: var(--tag-infra-txt); border-color: #d4c2a0; }
+
+    .lyr-sn { border-color: #b0ccb8; }
+    .lyr-sn .arch-layer-hdr { background: #e6f0e9; border-color: #b0ccb8; }
+    .lyr-sn .arch-layer-name { color: #2a5a3a; }
+    .node-sn { background: #edf5ef; color: #2a5a3a; border-color: #b0ccb8; }
+
+    /* ════════════════ 04. SDV CONCEPTS ════════════════ */
+    .sdv-grid {
+      border: 1.5px solid var(--border-card); border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .sdv-row { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .sdv-card {
+      background: var(--bg-card); padding: 24px 22px;
+      border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.2s; position: relative;
+    }
+    .sdv-card:nth-child(3n), .sdv-row .sdv-card:last-child { border-right: none; }
+    .sdv-card:hover, .sdv-card.open { background: var(--bg-card-alt); }
+    .sdv-card-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+      color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 10px;
+    }
+    .sdv-card h3 {
+      font-family: 'DM Serif Display', serif; font-size: 1.05rem;
+      color: var(--text-primary); margin-bottom: 8px; line-height: 1.25;
+    }
+    .sdv-card p { font-size: 0.84rem; font-weight: 300; color: var(--text-secondary); line-height: 1.6; }
+    .sdv-chevron {
+      position: absolute; bottom: 12px; right: 14px;
+      font-size: 11px; color: var(--text-muted); transition: transform 0.2s;
+    }
+    .sdv-card.open .sdv-chevron { transform: rotate(180deg); color: var(--accent-green); }
+
+    .sdv-expand {
+      display: none; background: var(--bg-card-alt);
+      border-bottom: 1px solid var(--border); padding: 32px;
+      animation: fadeSlide 0.2s ease;
+    }
+    .sdv-expand.show { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .sdv-expand h4 {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-sage);
+      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+    .sdv-expand p { font-size: 0.87rem; font-weight: 300; color: var(--text-secondary); line-height: 1.7; margin-bottom: 10px; }
+    .sdv-expand ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .sdv-expand li { font-size: 0.87rem; font-weight: 300; color: var(--text-secondary); line-height: 1.5; }
+    .sdv-expand li::before { content: '→ '; color: var(--accent-green); font-size: 0.75rem; }
+
+    /* ════════════════ 05. PROJECT CARDS ════════════════ */
+    .projects-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 24px;
+    }
+    .project-card {
+      background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: var(--radius); padding: 32px 32px 28px;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .project-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-sage));
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .project-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); border-color: var(--accent-sage); }
+    .project-card:hover::before { opacity: 1; }
+
+    .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .card-number { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.1em; }
+    .status-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px;
+    }
+    .status-complete { background: var(--status-complete-bg); color: var(--status-complete-txt); }
+    .status-progress { background: var(--status-progress-bg); color: var(--status-progress-txt); }
+    .card-project-type {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      color: var(--accent-sage); letter-spacing: 0.06em; margin-bottom: 8px;
+    }
+    .card-title {
+      font-family: 'DM Serif Display', serif; font-size: 1.35rem;
+      line-height: 1.25; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .card-divider { height: 1px; background: var(--border); margin-bottom: 18px; }
+    .card-description {
+      font-size: 0.9rem; font-weight: 300; color: var(--text-secondary);
+      line-height: 1.7; margin-bottom: 22px; flex: 1;
+    }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    /* ════════════════ 06. OTA FLOW ════════════════ */
+    .ota-flow {
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .ota-step {
+      padding: 22px 16px; border-right: 1px solid var(--border); position: relative;
+    }
+    .ota-step:last-child { border-right: none; }
+    .ota-step-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.63rem;
+      color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+    .ota-step h4 { font-family: 'DM Serif Display', serif; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 8px; line-height: 1.2; }
+    .ota-step p { font-size: 0.78rem; font-weight: 300; color: var(--text-secondary); line-height: 1.55; }
+    .ota-arrow {
+      position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+      width: 18px; height: 18px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--text-muted); z-index: 1;
+    }
+    .ota-step:last-child .ota-arrow { display: none; }
+
+    /* ════════════════ 07. AUTOSAR ════════════════ */
+    .autosar-compare {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: var(--bg-card); border: 1.5px solid var(--border-card);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card);
+    }
+    .autosar-col { padding: 32px; }
+    .autosar-col + .autosar-col { border-left: 1px solid var(--border); }
+    .autosar-col h3 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 4px; }
+    .autosar-classic h3 { color: var(--text-secondary); }
+    .autosar-adaptive h3 { color: var(--accent-green); }
+    .autosar-col .sub {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+      color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 24px;
+    }
+    .arow { display: flex; gap: 12px; margin-bottom: 13px; align-items: flex-start; }
+    .akey {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.63rem;
+      color: var(--accent-sage); letter-spacing: 0.08em; min-width: 76px; padding-top: 2px; flex-shrink: 0;
+    }
+    .aval { font-size: 0.86rem; font-weight: 300; color: var(--text-secondary); line-height: 1.5; }
+    .adiv { height: 1px; background: var(--border); margin-bottom: 20px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1.5px solid var(--border); padding: 32px 40px;
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-left { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .evo-grid { grid-template-columns: 1fr 1fr; }
+      .evo-card { border-bottom: 1px solid var(--border); }
+      .evo-detail.show { grid-template-columns: 1fr; gap: 24px; }
+      .sdv-row { grid-template-columns: 1fr 1fr; }
+      .sdv-expand.show { grid-template-columns: 1fr; gap: 24px; }
+      .ota-flow { grid-template-columns: 1fr 1fr 1fr; }
+      .ota-step:nth-child(3) { border-right: none; }
+      .ota-step:nth-child(n+4) { border-top: 1px solid var(--border); }
+      .autosar-compare { grid-template-columns: 1fr; }
+      .autosar-col + .autosar-col { border-left: none; border-top: 1px solid var(--border); }
+    }
+    @media (max-width: 700px) {
+      nav { padding: 0 20px; }
+      .hero { padding: 56px 20px 48px; }
+      .section-wrap { padding: 0 20px 64px; }
+      .evo-grid { grid-template-columns: 1fr; }
+      .sdv-row { grid-template-columns: 1fr; }
+      .sdv-card { border-right: none; }
+      .ota-flow { grid-template-columns: 1fr 1fr; }
+      .ota-step:nth-child(2n) { border-right: none; }
+      .ota-step:nth-child(n+3) { border-top: 1px solid var(--border); }
+      .ota-arrow { display: none; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .proto-layer { grid-template-columns: 120px 1fr; }
+      footer { padding: 24px 20px; }
+      .nav-links { gap: 16px; }
+      .arch-legend { gap: 8px; }
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-5px); }
+      to   { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-brand">Sahana N</a>
+  <ul class="nav-links">
+    <li><a href="index.html#projects">Projects</a></li>
+    <li><a href="index.html#stack">Stack</a></li>
+    <li><a href="#evolution" class="active">E/E Reference</a></li>
+    <li><a href="https://github.com/sahanagn" target="_blank" rel="noopener">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Technical Reference · Vehicle Architecture</div>
+  <h1>E/E Architecture &amp; <em>SDV</em></h1>
+  <p class="hero-subtitle">Sensor to Cloud · Full Stack Reference</p>
+  <div class="hero-divider"></div>
+  <p>
+    An interactive reference covering the full automotive software stack — from <strong>CAN/CAN FD at the sensor layer</strong> through SOME/IP middleware and gateway ECUs to <strong>cloud fleet intelligence over MQTT</strong>. Built from 8+ years of hands-on experience with gateway ECUs, AUTOSAR, OTA, and diagnostics at NIO, Karma, and Bosch. Click any section to expand.
+  </p>
+</section>
+
+<!-- ═══ 01. EVOLUTION ═══ -->
+<div class="section-wrap" id="evolution">
+  <div class="section-header">
+    <span class="section-label">01 /</span>
+    <h2 class="section-title">E/E Architecture Evolution</h2>
+  </div>
+
+  <div class="evo-grid">
+    <div class="evo-card" data-era="0" onclick="toggleEvo(0)">
+      <div class="evo-era">Era 01</div>
+      <div class="evo-title">Distributed / Point-to-Point</div>
+      <div class="evo-years">~1990s – 2010</div>
+      <span class="evo-chevron">▾</span>
+    </div>
+    <div class="evo-card" data-era="1" onclick="toggleEvo(1)">
+      <div class="evo-era">Era 02</div>
+      <div class="evo-title">Domain-Based Architecture</div>
+      <div class="evo-years">~2010 – 2020</div>
+      <span class="evo-chevron">▾</span>
+    </div>
+    <div class="evo-card" data-era="2" onclick="toggleEvo(2)">
+      <div class="evo-era">Era 03</div>
+      <div class="evo-title">Zonal Architecture</div>
+      <div class="evo-years">~2018 – Present</div>
+      <span class="evo-chevron">▾</span>
+    </div>
+    <div class="evo-card" data-era="3" onclick="toggleEvo(3)">
+      <div class="evo-era">Era 04</div>
+      <div class="evo-title">Central Compute / SDV</div>
+      <div class="evo-years">~2022 – Future</div>
+      <span class="evo-chevron">▾</span>
+    </div>
+  </div>
+
+  <div id="evo-0" class="evo-detail">
+    <div class="evo-col">
+      <h4>Architecture</h4>
+      <ul>
+        <li>100s of standalone ECUs, each with dedicated MCU + memory</li>
+        <li>Direct peer-to-peer wiring — no central compute</li>
+        <li>~1 ECU per feature: windows, wipers, HVAC each separate</li>
+        <li>Wire harness: 40–80 kg in luxury vehicles</li>
+      </ul>
+      <span class="evo-arch-chip">AUTOSAR Classic only</span>
+    </div>
+    <div class="evo-col">
+      <h4>Protocols</h4>
+      <ul>
+        <li>CAN (2 Mbps max) as primary backbone</li>
+        <li>LIN for low-bandwidth peripherals (switches, sensors)</li>
+        <li>K-Line / ISO 9141 for diagnostics</li>
+        <li>FlexRay for safety-critical chassis in some OEMs</li>
+        <li>ISO 14229 (UDS) over CAN for diagnostics</li>
+      </ul>
+    </div>
+    <div class="evo-col">
+      <h4>Challenges driving change</h4>
+      <ul>
+        <li>Software updates require physical dealer visit</li>
+        <li>Feature additions require new ECU hardware</li>
+        <li>No software reuse across ECUs or OEM platforms</li>
+        <li>Diagnostic coverage limited by CAN bandwidth</li>
+        <li>Integration test complexity grows exponentially</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="evo-1" class="evo-detail">
+    <div class="evo-col">
+      <h4>Architecture</h4>
+      <ul>
+        <li>ECUs grouped into domains: Powertrain, Body, Chassis, ADAS, IVI</li>
+        <li>Domain Controller (DCU) acts as gateway + compute hub per domain</li>
+        <li>Cross-domain comms via central gateway ECU</li>
+        <li>Backbone Ethernet begins replacing interior CAN</li>
+      </ul>
+      <span class="evo-arch-chip">AUTOSAR Classic + early Adaptive</span>
+    </div>
+    <div class="evo-col">
+      <h4>Protocols</h4>
+      <ul>
+        <li>CAN FD (8 Mbps) replaces CAN in new designs</li>
+        <li>100BASE-T1 Automotive Ethernet for domain backbones</li>
+        <li>SOME/IP for service-oriented inter-domain communication</li>
+        <li>DoIP (ISO 13400) enables diagnostics over Ethernet</li>
+        <li>OBD-II still mandated for regulatory compliance</li>
+      </ul>
+    </div>
+    <div class="evo-col">
+      <h4>What changes</h4>
+      <ul>
+        <li>Middleware layer introduced — AUTOSAR BSW, SOME/IP</li>
+        <li>Gateway ECU becomes software-defined — my NIO work</li>
+        <li>OTA updates possible at domain level</li>
+        <li>Security perimeter now meaningful (Ethernet attack surface)</li>
+        <li>Reduced ECU count, higher per-ECU complexity</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="evo-2" class="evo-detail">
+    <div class="evo-col">
+      <h4>Architecture</h4>
+      <ul>
+        <li>ECUs grouped by zone (Front-Left, Front-Right, Rear) not function</li>
+        <li>Zone Controllers aggregate local sensor/actuator nodes</li>
+        <li>Backbone Ethernet connects zones to central compute</li>
+        <li>Tesla Model 3, VW E3, Volvo SPA2 examples</li>
+      </ul>
+      <span class="evo-arch-chip">AUTOSAR Adaptive on zone controllers</span>
+    </div>
+    <div class="evo-col">
+      <h4>Protocols</h4>
+      <ul>
+        <li>1000BASE-T1 Gigabit Automotive Ethernet backbone</li>
+        <li>CAN FD retained at leaf nodes (sensors/actuators)</li>
+        <li>SOME/IP over Ethernet for inter-zone services</li>
+        <li>DoIP over Ethernet — single diagnostic entry point</li>
+        <li>MQTT or DDS for telemetry uplink to cloud</li>
+      </ul>
+    </div>
+    <div class="evo-col">
+      <h4>What changes</h4>
+      <ul>
+        <li>Software abstraction: zone controller hides topology from apps</li>
+        <li>OTA targets zone controller + all sub-nodes in one campaign</li>
+        <li>Diagnostic entry centralized — single VIN-level access</li>
+        <li>Cybersecurity: Ethernet firewall rules per zone, IDS needed</li>
+        <li>AUTOSAR Adaptive enables POSIX OS, dynamic services</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="evo-3" class="evo-detail">
+    <div class="evo-col">
+      <h4>Architecture</h4>
+      <ul>
+        <li>1–3 high-compute Vehicle Computers replace domain controllers</li>
+        <li>Hardware-software decoupling: apps run as containers/VMs</li>
+        <li>Vehicle Abstraction Layer hides ECU topology from apps</li>
+        <li>Continuous deployment: vehicle as a software platform</li>
+        <li>Rivian R2, Zeekr, NIO ET9 early SDV examples</li>
+      </ul>
+      <span class="evo-arch-chip">AUTOSAR Adaptive · Linux · ARA</span>
+    </div>
+    <div class="evo-col">
+      <h4>Protocols</h4>
+      <ul>
+        <li>Multi-Gb Ethernet backbone (2.5G / 10G)</li>
+        <li>DDS or SOME/IP for internal service mesh</li>
+        <li>MQTT / HTTPS for cloud uplink (UPTANE for OTA security)</li>
+        <li>UDS/DoIP remains for regulatory diagnostics</li>
+        <li>CAN FD lives on as leaf protocol near actuators</li>
+        <li>V2X (DSRC / C-V2X) for infrastructure comms</li>
+      </ul>
+    </div>
+    <div class="evo-col">
+      <h4>What changes</h4>
+      <ul>
+        <li>Features monetized post-sale: OTA enables subscription model</li>
+        <li>CI/CD pipelines extend to vehicle — fleet as deployment target</li>
+        <li>ML inference moves on-vehicle (ADAS, health monitoring)</li>
+        <li>Diagnostic intelligence shifts from read codes to predictive AI</li>
+        <li>Safety: ISO 26262 must account for OTA-updated software</li>
+        <li>Security: zero-trust, secure boot, signed OTA packages</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 02. PROTOCOL MAP ═══ -->
+<div class="section-wrap" id="protocols">
+  <div class="section-header">
+    <span class="section-label">02 /</span>
+    <h2 class="section-title">Protocol Mapping by Layer</h2>
+  </div>
+
+  <div class="callout callout-sage">
+    <span class="callout-icon">◈</span>
+    <span>Hover any protocol badge for a technical summary. Protocols are shown at their primary operating layer — some (like UDS) span multiple layers via transport adaptation.</span>
+  </div>
+
+  <div class="proto-stack">
+    <div class="proto-layer layer-cloud">
+      <div class="proto-layer-label">
+        <div class="proto-layer-name">Cloud</div>
+        <div class="proto-layer-sub">Internet / V2C</div>
+      </div>
+      <div class="proto-layer-content">
+        <span class="tag tag-protocol proto-badge">MQTT 5.0<div class="proto-tip">Publish-subscribe over TCP. QoS 0/1/2. Used for vehicle telemetry uplink to cloud fleet backends. Mosquitto broker common in automotive. Lightweight enough for always-on 4G vehicle connections.</div></span>
+        <span class="tag tag-protocol proto-badge">HTTPS / REST<div class="proto-tip">Standard web transport for OTA manifest fetch, campaign management APIs, and fleet dashboards. TLS 1.3 mandatory in modern vehicle cloud architectures.</div></span>
+        <span class="tag tag-protocol proto-badge">UPTANE<div class="proto-tip">Automotive OTA security framework. Dual-repo (Image + Director). Role-based key hierarchy (Root, Targets, Snapshot, Timestamp). Protects against rollback, freeze, and mix-and-match attacks. My P3 implements full UPTANE.</div></span>
+        <span class="tag tag-ml proto-badge">DDS / ARA::COM<div class="proto-tip">Data Distribution Service. Pub/sub with QoS policies. Used in AUTOSAR Adaptive ARA::COM for inter-process communication. Alternative to SOME/IP in some SDV platforms and in ROS2 (DDS backend).</div></span>
+      </div>
+    </div>
+
+    <div class="proto-layer layer-diag">
+      <div class="proto-layer-label">
+        <div class="proto-layer-name">Diagnostics</div>
+        <div class="proto-layer-sub">Off-board / OBD</div>
+      </div>
+      <div class="proto-layer-content">
+        <span class="tag tag-protocol proto-badge">DoIP (ISO 13400)<div class="proto-tip">Diagnostics over Internet Protocol. Routes UDS messages over TCP/UDP + Ethernet. Replaces K-Line and CAN-based diagnostic transport. Enables remote diagnostics. My P2 and P4 both implement DoIP servers via python-udsoncan.</div></span>
+        <span class="tag tag-protocol proto-badge">UDS (ISO 14229)<div class="proto-tip">Unified Diagnostic Services. Application-layer protocol for ECU diagnostics. Services: 0x10 (session), 0x19 (read DTC), 0x22 (read data), 0x2E (write), 0x31 (routine), 0x34–0x36 (flash). Runs over CAN, DoIP, or SOME/IP.</div></span>
+        <span class="tag tag-infra proto-badge">OBD-II / ISO 15765<div class="proto-tip">Regulatory on-board diagnostics. Mandated since 1996 (US) / 2003 (EU). Mode $01–$0A for emissions, freeze frame, DTC read. CAN-based transport (ISO 15765-4). Cannot be replaced by proprietary protocols for emissions compliance.</div></span>
+      </div>
+    </div>
+
+    <div class="proto-layer layer-mw">
+      <div class="proto-layer-label">
+        <div class="proto-layer-name">Middleware</div>
+        <div class="proto-layer-sub">Service layer</div>
+      </div>
+      <div class="proto-layer-content">
+        <span class="tag tag-infra proto-badge">SOME/IP<div class="proto-tip">Scalable service-Oriented MiddlewarE over IP. Service discovery (SOME/IP-SD), remote procedure calls, events, and fields over UDP/TCP + Ethernet. Core middleware for AUTOSAR Adaptive and domain-based architectures. My P1 IDS covers SOME/IP traffic.</div></span>
+        <span class="tag tag-infra proto-badge">AUTOSAR Classic BSW<div class="proto-tip">Basic Software in AUTOSAR Classic. COM stack, DCM (diagnostic comm manager), NM (network management), PDU Router. Runs on bare-metal RTOS. Used in body ECUs, powertrain ECUs, gateway modules.</div></span>
+        <span class="tag tag-infra proto-badge">AUTOSAR Adaptive ARA<div class="proto-tip">AUTOSAR Runtime for Adaptive Applications. POSIX-compliant OS. ara::com (SOA comms), ara::diag (diagnostics), ara::exec (execution mgmt), ara::crypto, ara::ucm (OTA). Used on domain/zone controllers and Vehicle Computers.</div></span>
+        <span class="tag tag-ml proto-badge">Vehicle Abstraction Layer<div class="proto-tip">Software layer hiding ECU topology from application services. Apps subscribe to signals ("vehicle.speed_kmh") without knowing which physical ECU generates them. Key SDV enabler. Open implementations: Eclipse Kuksa.VAL, COVESA VSS.</div></span>
+      </div>
+    </div>
+
+    <div class="proto-layer layer-eth">
+      <div class="proto-layer-label">
+        <div class="proto-layer-name">In-Vehicle Ethernet</div>
+        <div class="proto-layer-sub">Domain / Zonal backbone</div>
+      </div>
+      <div class="proto-layer-content">
+        <span class="tag tag-ml proto-badge">100BASE-T1<div class="proto-tip">100 Mbps single-pair automotive Ethernet (IEEE 802.3bw). Unshielded twisted pair, BroadR-Reach PHY. Domain backbone in current-gen vehicles. Suited for camera streams, gateway uplinks. BMW, Audi, VW Group adoption.</div></span>
+        <span class="tag tag-ml proto-badge">1000BASE-T1<div class="proto-tip">Gigabit single-pair automotive Ethernet (IEEE 802.3bp). Zonal backbone in next-gen architectures. Connects zone controllers to central compute. Required for streaming LiDAR point clouds and multi-camera data.</div></span>
+        <span class="tag tag-ml proto-badge">AVB / TSN<div class="proto-tip">Audio Video Bridging / Time-Sensitive Networking. IEEE 802.1AS (timing sync), 802.1Qbv (traffic scheduling), 802.1CB (frame replication). Deterministic latency over Ethernet — critical for ADAS sensor fusion and chassis control loops.</div></span>
+      </div>
+    </div>
+
+    <div class="proto-layer layer-bus">
+      <div class="proto-layer-label">
+        <div class="proto-layer-name">In-Vehicle Bus</div>
+        <div class="proto-layer-sub">ECU interconnect</div>
+      </div>
+      <div class="proto-layer-content">
+        <span class="tag tag-infra proto-badge">CAN FD (ISO 11898)<div class="proto-tip">CAN with Flexible Data-rate. Up to 8 Mbps data phase, 64-byte payload vs CAN's 8 bytes. Backward compatible with CAN 2.0. Standard for new ECU designs. Still dominant at sensor/actuator level in zonal architectures. My P1 IDS analyzes CAN FD traffic.</div></span>
+        <span class="tag tag-infra proto-badge">CAN 2.0 (Classic)<div class="proto-tip">Controller Area Network. 1 Mbps, 8-byte frames, CSMA/CD arbitration. Ubiquitous since 1994. Still in body control, powertrain, instrument clusters. Priority-based bus arbitration via 11/29-bit identifier.</div></span>
+        <span class="tag tag-infra proto-badge">LIN 2.x<div class="proto-tip">Local Interconnect Network. Single-wire, 20 kbps, master-slave. Low-cost, low-bandwidth peripheral bus. Seat motors, mirror adjustment, ambient lighting, simple sensors. Schedule-based, no arbitration.</div></span>
+        <span class="tag tag-infra proto-badge">FlexRay<div class="proto-tip">Deterministic dual-channel bus, up to 10 Mbps. Time-triggered for safety-critical chassis (BMW active steering, Bosch ESP). High cost and complexity — CAN FD + Ethernet preferred in new designs.</div></span>
+      </div>
+    </div>
+
+    <div class="proto-layer layer-sensor">
+      <div class="proto-layer-label">
+        <div class="proto-layer-name">Sensor / Actuator</div>
+        <div class="proto-layer-sub">Physical layer</div>
+      </div>
+      <div class="proto-layer-content">
+        <span class="tag tag-protocol proto-badge">PWM<div class="proto-tip">Pulse Width Modulation. Analog-style control for motors, fans, throttle bodies. Duty cycle 0–100% maps to control position. Simple, robust, no protocol overhead.</div></span>
+        <span class="tag tag-protocol proto-badge">SPI / I²C<div class="proto-tip">On-board sensor buses. SPI for high-speed IMU, ADC, flash memory. I²C for temperature sensors, EEPROMs, address-based multi-device. Typical distances: cm to meters within ECU or harness segment.</div></span>
+        <span class="tag tag-protocol proto-badge">SENT (SAE J2716)<div class="proto-tip">Single-Edge Nibble Transmission. Unidirectional, single-wire, 4-bit nibbles. Throttle position, pressure sensors, torque sensors. Where analog is too noisy and CAN is overkill.</div></span>
+        <span class="tag tag-protocol proto-badge">Analog / 0–5V<div class="proto-tip">Direct voltage signals for simple sensors: O2 sensors, coolant temp, MAP sensor. Susceptible to noise — being replaced by SENT and digital buses in new designs.</div></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 03. ARCHITECTURE DIAGRAM ═══ -->
+<div class="section-wrap" id="architecture">
+  <div class="section-header">
+    <span class="section-label">03 /</span>
+    <h2 class="section-title">Full Stack Architecture</h2>
+  </div>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">◉</span>
+    <span><strong>Highlighted nodes</strong> show where my portfolio projects connect into the vehicle software stack — from fleet cloud down to physical sensors.</span>
+  </div>
+
+  <div class="arch-diagram">
+    <div class="arch-hdr">
+      <span class="arch-hdr-title">SDV / Zonal Architecture — Software Stack</span>
+      <div class="arch-legend">
+        <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#4a7c5e"></div>Cloud / Fleet</div>
+        <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#52796f"></div>OTA Infra</div>
+        <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#7a756e"></div>Gateway</div>
+        <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#6b5aa8"></div>Domain / AD</div>
+        <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#b06030"></div>Security</div>
+        <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#2d6a4f"></div>Sensor</div>
+      </div>
+    </div>
+    <div class="arch-body">
+
+      <div class="arch-layer lyr-cloud">
+        <div class="arch-layer-hdr">
+          <span class="arch-layer-name">☁ Cloud Fleet Backend</span>
+          <span class="arch-layer-proto">MQTT · HTTPS · REST · UPTANE</span>
+        </div>
+        <div class="arch-nodes">
+          <div class="arch-node node-cloud proj">Fleet Health Dashboard<span class="proj-badge">P2</span></div>
+          <div class="arch-node node-cloud proj">OTA Campaign Manager<span class="proj-badge">P3</span></div>
+          <div class="arch-node node-cloud">Telemetry Ingestion</div>
+          <div class="arch-node node-cloud">DTC Aggregation</div>
+          <div class="arch-node node-cloud">Fleet Analytics</div>
+          <div class="arch-node node-cloud proj">Diagnostic AI Agent<span class="proj-badge">P5↑</span></div>
+        </div>
+      </div>
+
+      <div class="arch-conn">↕ MQTT over TLS 1.3 · UPTANE Dual-Repo</div>
+
+      <div class="arch-layer lyr-ota">
+        <div class="arch-layer-hdr">
+          <span class="arch-layer-name">⟳ OTA Update Infrastructure</span>
+          <span class="arch-layer-proto">UPTANE · Delta / Full Image · Rollback Logic</span>
+        </div>
+        <div class="arch-nodes">
+          <div class="arch-node node-ota proj">Risk Score Engine (XGBoost)<span class="proj-badge">P3</span></div>
+          <div class="arch-node node-ota proj">Staged Rollout Controller<span class="proj-badge">P3</span></div>
+          <div class="arch-node node-ota proj">Dependency Graph + Rollback<span class="proj-badge">P3</span></div>
+          <div class="arch-node node-ota">Image Repository (UPTANE)</div>
+          <div class="arch-node node-ota">Director Repository (UPTANE)</div>
+          <div class="arch-node node-ota">Delta Package Generator</div>
+        </div>
+      </div>
+
+      <div class="arch-conn">↕ DoIP (ISO 13400) · UDS (ISO 14229) · SOME/IP</div>
+
+      <div class="arch-layer lyr-gw">
+        <div class="arch-layer-hdr">
+          <span class="arch-layer-name">⬡ Vehicle Gateway / Central Computer</span>
+          <span class="arch-layer-proto">AUTOSAR Adaptive · Linux · ARA · POSIX</span>
+        </div>
+        <div class="arch-nodes">
+          <div class="arch-node node-gw">Gateway Routing Engine</div>
+          <div class="arch-node node-gw">UDS DCM (ara::diag)</div>
+          <div class="arch-node node-gw">SOME/IP Service Registry</div>
+          <div class="arch-node node-gw">Vehicle Abstraction Layer</div>
+          <div class="arch-node node-gw">Secure Boot Chain</div>
+          <div class="arch-node node-gw">OTA Client (UPTANE agent)</div>
+          <div class="arch-node node-gw proj">Predictive Health Engine<span class="proj-badge">P2</span></div>
+        </div>
+      </div>
+
+      <div class="arch-conn">↕ 1000BASE-T1 Ethernet · SOME/IP · TSN</div>
+
+      <div class="arch-layer lyr-dm">
+        <div class="arch-layer-hdr">
+          <span class="arch-layer-name">◈ Domain / Zone Controllers + AD Compute</span>
+          <span class="arch-layer-proto">AUTOSAR Classic + Adaptive · POSIX · ROS2</span>
+        </div>
+        <div class="arch-nodes">
+          <div class="arch-node node-dm">Powertrain DCU</div>
+          <div class="arch-node node-dm">Chassis / ADAS DCU</div>
+          <div class="arch-node node-dm">Body Control Module</div>
+          <div class="arch-node node-dm">IVI / HMI Controller</div>
+          <div class="arch-node node-dm proj">AD Safety Monitor (ROS2)<span class="proj-badge">P4</span></div>
+          <div class="arch-node node-dm">Perception Stack</div>
+          <div class="arch-node node-dm">Planning &amp; Control</div>
+        </div>
+      </div>
+
+      <div class="arch-conn">↕ 100BASE-T1 Ethernet · CAN FD · SOME/IP</div>
+
+      <div class="arch-layer lyr-sec">
+        <div class="arch-layer-hdr">
+          <span class="arch-layer-name">⚡ Network Security Layer (IDS/IPS)</span>
+          <span class="arch-layer-proto">IDPS · Anomaly Detection · Firewall · SecOC</span>
+        </div>
+        <div class="arch-nodes">
+          <div class="arch-node node-sec proj">CAN Anomaly Detection (ML)<span class="proj-badge">P1</span></div>
+          <div class="arch-node node-sec proj">DoIP / SOME/IP Rule-Based IDS<span class="proj-badge">P1</span></div>
+          <div class="arch-node node-sec proj">SHAP Explainability Layer<span class="proj-badge">P1</span></div>
+          <div class="arch-node node-sec">Ethernet Switch (TSN-aware)</div>
+          <div class="arch-node node-sec">Firewall / Packet Filter</div>
+          <div class="arch-node node-sec">SecOC (AUTOSAR)</div>
+        </div>
+      </div>
+
+      <div class="arch-conn">↕ CAN FD · LIN · SPI · Analog</div>
+
+      <div class="arch-layer lyr-sn">
+        <div class="arch-layer-hdr">
+          <span class="arch-layer-name">○ Sensors &amp; Actuators</span>
+          <span class="arch-layer-proto">CAN FD · LIN · SENT · PWM · SPI</span>
+        </div>
+        <div class="arch-nodes">
+          <div class="arch-node node-sn">Camera Array</div>
+          <div class="arch-node node-sn">LiDAR</div>
+          <div class="arch-node node-sn">Radar (77 GHz)</div>
+          <div class="arch-node node-sn">IMU</div>
+          <div class="arch-node node-sn">Wheel Speed Sensors</div>
+          <div class="arch-node node-sn">TPMS Nodes</div>
+          <div class="arch-node node-sn">HVAC Actuators</div>
+          <div class="arch-node node-sn">Battery Management System</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 04. SDV CONCEPTS ═══ -->
+<div class="section-wrap" id="sdv">
+  <div class="section-header">
+    <span class="section-label">04 /</span>
+    <h2 class="section-title">SDV Key Concepts</h2>
+  </div>
+
+  <div class="sdv-grid">
+    <div class="sdv-row">
+      <div class="sdv-card" onclick="toggleSDV(0)">
+        <div class="sdv-card-num">01 /</div>
+        <h3>Service-Oriented Architecture</h3>
+        <p>Vehicle functions exposed as software services. Providers and consumers decouple via SOME/IP or DDS service contracts at runtime.</p>
+        <span class="sdv-chevron">▾</span>
+      </div>
+      <div class="sdv-card" onclick="toggleSDV(1)">
+        <div class="sdv-card-num">02 /</div>
+        <h3>Hardware-Software Decoupling</h3>
+        <p>Apps run on standardized compute platforms. Feature changes no longer require new ECU hardware — just a software update via OTA.</p>
+        <span class="sdv-chevron">▾</span>
+      </div>
+      <div class="sdv-card" onclick="toggleSDV(2)">
+        <div class="sdv-card-num">03 /</div>
+        <h3>OTA Lifecycle</h3>
+        <p>Full firmware update pipeline from cloud campaign management to on-vehicle flash — with safety gates, risk scoring, and rollback at every stage.</p>
+        <span class="sdv-chevron">▾</span>
+      </div>
+    </div>
+
+    <div class="sdv-expand" id="sdv-0">
+      <div>
+        <h4>What SOA means in automotive</h4>
+        <p>Traditional automotive software used signal-based communication — a CAN frame with a known ID maps to a specific signal. SOA replaces this with service contracts: a provider declares what data it offers and how to request it; consumers discover and bind at runtime via SOME/IP-SD.</p>
+        <p>AUTOSAR Adaptive's ara::com abstracts SOME/IP behind a typed C++ API. Service versioning allows rolling updates in mixed-version fleets. Failed services restart independently without affecting other services.</p>
+      </div>
+      <div>
+        <h4>Why it matters for SDV</h4>
+        <ul>
+          <li>New features subscribe to existing services without ECU hardware change</li>
+          <li>Service versioning supports rolling updates in mixed fleets</li>
+          <li>Microservice architecture: separate update cycles per service</li>
+          <li>Fault isolation: failed service restarts independently</li>
+          <li>Standard interface enables third-party app ecosystem on vehicle</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sdv-expand" id="sdv-1">
+      <div>
+        <h4>The shift from hardware-defined to software-defined</h4>
+        <p>In traditional architectures, every feature tied to specific hardware. Adaptive cruise control required its own ECU with dedicated MCU, CAN transceivers, and fixed flash. Changing the feature meant an 18–36 month hardware revision cycle.</p>
+        <p>In SDV, the Vehicle Computer is standardized compute (ARM Cortex-A / NVIDIA Orin). Features run as software containers or VMs. The OEM can add a feature or change a behavior via OTA — no hardware touch required.</p>
+      </div>
+      <div>
+        <h4>Architectural requirements</h4>
+        <ul>
+          <li>POSIX-compliant OS on zone controllers and Vehicle Computers</li>
+          <li>Container runtime (Docker, Podman) or hypervisor (QNX, ACRN)</li>
+          <li>Hardware abstraction drivers for peripherals</li>
+          <li>Secure boot and code signing to prevent unauthorized software</li>
+          <li>Resource isolation: safety-critical and non-critical partitioned by VM</li>
+          <li>AUTOSAR Adaptive ARA provides the standardized runtime APIs</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sdv-expand" id="sdv-2">
+      <div>
+        <h4>OTA lifecycle stages</h4>
+        <p>An OTA campaign begins in the cloud: the OEM uploads a signed firmware package to the UPTANE Image Repository. The Director Repository builds a vehicle-specific update manifest — which ECUs, which package versions, in what dependency order.</p>
+        <p>The vehicle OTA client fetches the manifest, validates UPTANE metadata signatures, checks eligibility (parked, battery SOC, connectivity), downloads and verifies the package hash, applies it, and reports success or failure back to the cloud.</p>
+      </div>
+      <div>
+        <h4>Safety gates in my P3 implementation</h4>
+        <ul>
+          <li>7-condition eligibility check before any ECU enters update mode</li>
+          <li>XGBoost risk score per vehicle: 12 features including connectivity stability</li>
+          <li>Dependency graph: gateway updates before perception before planning</li>
+          <li>Staged rollout: 1% canary → 10% → 50% → 100% fleet</li>
+          <li>Failure threshold triggers automatic campaign pause</li>
+          <li>Dependency-aware rollback: ML model predicts rollback success first</li>
+          <li>9 failure mode simulations: battery death, timeout, corrupt package</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sdv-row">
+      <div class="sdv-card" onclick="toggleSDV(3)">
+        <div class="sdv-card-num">04 /</div>
+        <h3>Vehicle Abstraction Layer</h3>
+        <p>API layer hiding physical ECU topology. Apps subscribe to vehicle signals — not specific ECU addresses or CAN frame IDs.</p>
+        <span class="sdv-chevron">▾</span>
+      </div>
+      <div class="sdv-card" onclick="toggleSDV(4)">
+        <div class="sdv-card-num">05 /</div>
+        <h3>Continuous Deployment to Vehicle</h3>
+        <p>CI/CD pipelines extend to the vehicle fleet. Feature flags, staged rollout, A/B cohorts — vehicle as a software deployment target.</p>
+        <span class="sdv-chevron">▾</span>
+      </div>
+      <div class="sdv-card" onclick="toggleSDV(5)">
+        <div class="sdv-card-num">06 /</div>
+        <h3>Predictive Diagnostics</h3>
+        <p>Shift from reactive DTC reading to AI-driven failure prediction. Survival analysis, sensor telemetry fusion, fleet-wide pattern learning.</p>
+        <span class="sdv-chevron">▾</span>
+      </div>
+    </div>
+
+    <div class="sdv-expand" id="sdv-3">
+      <div>
+        <h4>Why the abstraction layer is critical</h4>
+        <p>Without a VAL, every application must know the exact CAN ID, byte offset, and encoding of every signal it consumes. Add a new ECU or change a frame layout, and every consuming app breaks.</p>
+        <p>The VAL maps logical vehicle signals ("vehicle.speed_kmh", "hvac.cabin_temp_C") to physical CAN frames, SOME/IP events, or direct sensor readings. Apps consume the logical API and remain topology-agnostic — enabling hardware evolution without application rewrites.</p>
+      </div>
+      <div>
+        <h4>Industry implementations</h4>
+        <ul>
+          <li>AUTOSAR Signal-Based / Service-Based Gateway routing</li>
+          <li>COVESA Vehicle Signal Specification (VSS) — open signal taxonomy</li>
+          <li>Eclipse Kuksa.VAL — open-source VAL server (gRPC / VISS API)</li>
+          <li>AUTOSAR Adaptive ara::com typed service interfaces</li>
+          <li>OEM-proprietary abstraction layers (NIO, Tesla, Rivian in-house)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sdv-expand" id="sdv-4">
+      <div>
+        <h4>Vehicle fleet as a software deployment target</h4>
+        <p>In SDV, the software development cycle for a feature no longer ends at the factory. CI/CD pipelines build, test, sign, and deploy to a staging fleet before wider rollout. Feature flags allow dark launching: code ships to all vehicles, feature is off. The OEM enables it for a cohort, measures behavioral telemetry, and widens if KPIs are met.</p>
+      </div>
+      <div>
+        <h4>What this requires</h4>
+        <ul>
+          <li>Signed software packages with UPTANE key hierarchy</li>
+          <li>Vehicle connectivity: 4G/5G always-on connection</li>
+          <li>Fleet management backend: campaign targeting, rollout control</li>
+          <li>Behavioral telemetry: did the new feature work correctly?</li>
+          <li>Rollback infrastructure: automatic recovery from failed updates</li>
+          <li>ISO 26262: functional safety impact assessment for every OTA update</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sdv-expand" id="sdv-5">
+      <div>
+        <h4>From reactive DTCs to predictive intelligence</h4>
+        <p>Traditional diagnostics: check engine light appears, technician reads P0300 code, replaces part. The vehicle was already degraded for weeks before detection.</p>
+        <p>Predictive diagnostics continuously streams sensor telemetry to a cloud ML model. XGBoost predicts failure probability 30+ days out and triggers proactive maintenance scheduling before the failure occurs.</p>
+      </div>
+      <div>
+        <h4>My P2 implementation</h4>
+        <ul>
+          <li>17 sensor health parameters streamed via MQTT to TimescaleDB</li>
+          <li>Cross-sensor correlation: camera + LiDAR degrading together → power root cause</li>
+          <li>XGBoost: 30-day failure probability per component</li>
+          <li>Cox Proportional Hazard: remaining useful life with confidence intervals</li>
+          <li>Fleet action engine: restrict route, schedule calibration, or pull from service</li>
+          <li>UDS diagnostic server exposes AI predictions over standard DoIP interface</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 05. PROJECTS ═══ -->
+<div class="section-wrap" id="projects">
+  <div class="section-header">
+    <span class="section-label">05 /</span>
+    <h2 class="section-title">Portfolio → Architecture Mapping</h2>
+  </div>
+
+  <div class="projects-grid">
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">P1 · COMPLETE</span>
+        <span class="status-badge status-complete">Network Security Layer</span>
+      </div>
+      <div class="card-project-type">Cybersecurity + Edge ML + Multi-Protocol IDS</div>
+      <h3 class="card-title">CAN &amp; Ethernet Intrusion Detection System</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Multi-protocol IDS sitting at the network security layer between the physical bus and domain controllers. ML-based anomaly detection on CAN FD traffic + rule-based IDS on DoIP and SOME/IP sessions. Multi-scale temporal windowing at 10ms / 100ms / 500ms catches both fast DoS attacks and slow stealthy fuzzing. TFLite Micro edge deployment on QEMU Cortex-M7. SHAP explains which protocol feature triggered each alert — per detection, not just per model.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">SocketCAN</span>
+        <span class="tag tag-protocol">DoIP</span>
+        <span class="tag tag-protocol">SOME/IP</span>
+        <span class="tag tag-ml">PyTorch</span>
+        <span class="tag tag-ml">Isolation Forest</span>
+        <span class="tag tag-ml">SHAP</span>
+        <span class="tag tag-infra">TFLite Micro</span>
+        <span class="tag tag-infra">QEMU ARM</span>
+        <span class="tag tag-infra">MLflow</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">P2 · COMPLETE</span>
+        <span class="status-badge status-complete">Cloud Fleet Backend</span>
+      </div>
+      <div class="card-project-type">Sensor Telemetry + Diagnostic Intelligence + Fleet Prognostics</div>
+      <h3 class="card-title">Predictive Vehicle Health &amp; Prognostics Platform</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Fleet-level predictive diagnostics in the cloud backend layer. 17 sensor health parameters streamed via MQTT into TimescaleDB. XGBoost predicts component failure within 30 days; Cox Proportional Hazard survival analysis estimates remaining useful life. Cross-sensor correlation: camera + LiDAR degrading simultaneously → shared power root cause. UDS diagnostic server over DoIP exposes AI-generated health predictions through standard automotive protocols.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">python-udsoncan</span>
+        <span class="tag tag-protocol">DoIP</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">XGBoost</span>
+        <span class="tag tag-ml">lifelines (survival)</span>
+        <span class="tag tag-ml">SHAP</span>
+        <span class="tag tag-infra">TimescaleDB</span>
+        <span class="tag tag-infra">FastAPI</span>
+        <span class="tag tag-infra">MLflow</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">P3 · COMPLETE</span>
+        <span class="status-badge status-complete">OTA Infrastructure</span>
+      </div>
+      <div class="card-project-type">Predictive Risk Scoring + Staged Rollout + Dependency-Aware Rollback</div>
+      <h3 class="card-title">Autonomous Fleet OTA Intelligence Platform</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Full OTA campaign infrastructure from cloud to vehicle. UPTANE dual-repo, 7-condition eligibility engine, XGBoost risk scoring per vehicle using 12 features, dependency-aware 7-ECU update graph with topological ordering, staged rollout (1%→10%→50%→fleet), dependency-aware rollback with ML-predicted rollback success probability before execution. 9 failure mode simulations with A/B cohort comparison and statistical significance testing.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">UPTANE</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">XGBoost</span>
+        <span class="tag tag-ml">SciPy</span>
+        <span class="tag tag-infra">NetworkX</span>
+        <span class="tag tag-infra">PostgreSQL</span>
+        <span class="tag tag-infra">FastAPI</span>
+        <span class="tag tag-infra">MLflow</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">P4 · IN PROGRESS</span>
+        <span class="status-badge status-progress">AD Compute Layer</span>
+      </div>
+      <div class="card-project-type">On-Vehicle AD Stack Health Monitoring + ISO 26262</div>
+      <h3 class="card-title">Autonomous Vehicle Real-Time Safety Monitor</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        On-vehicle ROS2 safety monitor at the AD compute layer. Five sensor health monitors at 10Hz. Rolling z-score anomaly detection with 5ms latency budget. Cross-sensor correlation for ASIL D root-cause classification. ISO 26262-aligned degradation levels with hysteresis: nominal → reduced ODD → minimal risk condition → safe stop. UDS/DoIP diagnostic server exposes AD-specific DTCs. Validated across six degradation scenarios on nuScenes dataset.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">ROS2</span>
+        <span class="tag tag-protocol">python-udsoncan</span>
+        <span class="tag tag-protocol">DoIP</span>
+        <span class="tag tag-protocol">SOME/IP</span>
+        <span class="tag tag-ml">ISO 26262</span>
+        <span class="tag tag-ml">OpenCV</span>
+        <span class="tag tag-ml">Open3D</span>
+        <span class="tag tag-infra">nuScenes</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 06. OTA LIFECYCLE ═══ -->
+<div class="section-wrap" id="ota">
+  <div class="section-header">
+    <span class="section-label">06 /</span>
+    <h2 class="section-title">OTA Update Lifecycle</h2>
+  </div>
+
+  <div class="ota-flow">
+    <div class="ota-step">
+      <div class="ota-step-num">01</div>
+      <h4>Package Build</h4>
+      <p>CI/CD generates signed firmware. Delta vs full image decision. Package signed with UPTANE Image Repository key.</p>
+      <div class="ota-arrow">›</div>
+    </div>
+    <div class="ota-step">
+      <div class="ota-step-num">02</div>
+      <h4>Campaign</h4>
+      <p>OEM defines target vehicles, ECU versions, schedule. Director Repository generates per-vehicle manifests. XGBoost risk scored per vehicle.</p>
+      <div class="ota-arrow">›</div>
+    </div>
+    <div class="ota-step">
+      <div class="ota-step-num">03</div>
+      <h4>Eligibility</h4>
+      <p>Vehicle checks parked state, battery SOC, connectivity type, ECU compatibility, active DTCs. 7 conditions in P3.</p>
+      <div class="ota-arrow">›</div>
+    </div>
+    <div class="ota-step">
+      <div class="ota-step-num">04</div>
+      <h4>Download &amp; Verify</h4>
+      <p>Package streamed over 4G/5G. Hash verified against UPTANE metadata. Staged into secondary partition (A/B).</p>
+      <div class="ota-arrow">›</div>
+    </div>
+    <div class="ota-step">
+      <div class="ota-step-num">05</div>
+      <h4>Apply &amp; Validate</h4>
+      <p>Dependency graph determines ECU update order. Each ECU flashed and validated. Boot counter watchdog checks post-apply.</p>
+      <div class="ota-arrow">›</div>
+    </div>
+    <div class="ota-step">
+      <div class="ota-step-num">06</div>
+      <h4>Report &amp; Rollback</h4>
+      <p>Success/failure reported to cloud. On failure: ML model predicts rollback success probability before executing dependency-aware rollback.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 07. AUTOSAR ═══ -->
+<div class="section-wrap" id="autosar">
+  <div class="section-header">
+    <span class="section-label">07 /</span>
+    <h2 class="section-title">AUTOSAR Classic vs Adaptive</h2>
+  </div>
+
+  <div class="autosar-compare">
+    <div class="autosar-col autosar-classic">
+      <h3>AUTOSAR Classic</h3>
+      <div class="sub">CP · R4.x · OSEK/VDX RTOS</div>
+      <div class="adiv"></div>
+      <div class="arow"><span class="akey">OS</span><span class="aval">OSEK/VDX RTOS. Cooperative + preemptive tasks. Fixed memory, no virtual addressing.</span></div>
+      <div class="arow"><span class="akey">Language</span><span class="aval">C only. ARXML-defined SWC interfaces. Autocode generation via TargetLink / MATLAB.</span></div>
+      <div class="arow"><span class="akey">Comms</span><span class="aval">COM stack, PDU Router, CanTp. Signal-based, compile-time topology.</span></div>
+      <div class="arow"><span class="akey">Diagnostics</span><span class="aval">DCM module. UDS over CanTp. DEM for DTC storage. Fim for function inhibition.</span></div>
+      <div class="arow"><span class="akey">OTA</span><span class="aval">Fls / NvM modules. UDS 0x34–0x36 flash sequence. Separate bootloader required.</span></div>
+      <div class="arow"><span class="akey">Targets</span><span class="aval">Body ECUs, powertrain, chassis, sensors. NXP S32K, Renesas RH850, Infineon TC3xx.</span></div>
+      <div class="arow"><span class="akey">Safety</span><span class="aval">ISO 26262 up to ASIL D. Static memory allocation aids safety analysis. No dynamic linking.</span></div>
+    </div>
+    <div class="autosar-col autosar-adaptive">
+      <h3>AUTOSAR Adaptive</h3>
+      <div class="sub">AP · R21-11+ · POSIX PSE51</div>
+      <div class="adiv"></div>
+      <div class="arow"><span class="akey">OS</span><span class="aval">POSIX PSE51 profile. Dynamic processes, virtual memory, MMU protection. QNX, Linux.</span></div>
+      <div class="arow"><span class="akey">Language</span><span class="aval">C++14/17. ara:: namespace APIs. Service-Oriented Architecture native support.</span></div>
+      <div class="arow"><span class="akey">Comms</span><span class="aval">ara::com — SOME/IP and DDS binding. Runtime service discovery. Dynamic subscriptions.</span></div>
+      <div class="arow"><span class="akey">Diagnostics</span><span class="aval">ara::diag. UDS over DoIP natively. Remote diagnostic sessions. Dynamic DTC registration.</span></div>
+      <div class="arow"><span class="akey">OTA</span><span class="aval">ara::ucm (Update and Config Management). UCM Master coordinates multi-ECU campaign.</span></div>
+      <div class="arow"><span class="akey">Targets</span><span class="aval">Domain/zone controllers, Vehicle Computers. NVIDIA Orin, NXP S32G, Qualcomm SA8xxx.</span></div>
+      <div class="arow"><span class="akey">Safety</span><span class="aval">ISO 26262 up to ASIL B mixed criticality. Higher-ASIL functions partitioned by hypervisor.</span></div>
+    </div>
+  </div>
+
+  <div class="callout callout-sage" style="margin-top: 24px;">
+    <span class="callout-icon">→</span>
+    <span>
+      <strong>Real-world deployment:</strong> In domain-based architectures (my NIO work), the gateway ECU ran <strong>AUTOSAR Classic</strong> for routing and signal processing, while the domain controller above it ran <strong>AUTOSAR Adaptive</strong> for SOME/IP service registry, OTA management, and fleet telemetry uplink. Both stacks coexist, communicating via PDU Router → Ethernet adapter → ara::com SOME/IP binding.
+    </span>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-left">E/E Architecture · SDV · Sensor to Cloud</span>
+  <span class="footer-right"><a href="index.html" style="color: var(--accent-green); text-decoration: none;">← Back to Portfolio</a></span>
+</footer>
+
+<script>
+// ── EVOLUTION ──
+let activeEvo = null;
+function toggleEvo(era) {
+  const cards = document.querySelectorAll('.evo-card');
+  const el = document.getElementById('evo-' + era);
+  if (activeEvo === era) {
+    cards[era].classList.remove('active');
+    el.classList.remove('show');
+    activeEvo = null;
+    return;
+  }
+  if (activeEvo !== null) {
+    cards[activeEvo].classList.remove('active');
+    document.getElementById('evo-' + activeEvo).classList.remove('show');
+  }
+  cards[era].classList.add('active');
+  el.classList.add('show');
+  activeEvo = era;
+}
+toggleEvo(1); // domain era open by default
+
+// ── SDV (two rows of 3, each row followed by its expands) ──
+// Card indices 0-2 are in row1, 3-5 are in row2
+let activeSDV = null;
+function toggleSDV(idx) {
+  const cards = document.querySelectorAll('.sdv-card');
+  const el = document.getElementById('sdv-' + idx);
+  if (activeSDV === idx) {
+    cards[idx].classList.remove('open');
+    el.classList.remove('show');
+    activeSDV = null;
+    return;
+  }
+  if (activeSDV !== null) {
+    cards[activeSDV].classList.remove('open');
+    document.getElementById('sdv-' + activeSDV).classList.remove('show');
+  }
+  cards[idx].classList.add('open');
+  el.classList.add('show');
+  activeSDV = idx;
+}
+
+// ── SCROLL NAV HIGHLIGHT ──
+const sections = document.querySelectorAll('.section-wrap[id]');
+const navAs = document.querySelectorAll('.nav-links a');
+new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navAs.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' }).observe(document.getElementById('evolution'));
+
+// ── CONTENT PROTECTION ──
+// Disable right-click context menu
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Disable Ctrl/Cmd + U (view source), S (save), A (select all), C (copy), P (print)
+document.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && ['u','s','a','c','p'].includes(key)) {
+    e.preventDefault();
+  }
+  // Disable F12 (DevTools shortcut — soft deterrent only)
+  if (e.key === 'F12') e.preventDefault();
+});
+
+// Disable drag-to-copy on text nodes
+document.addEventListener('dragstart', e => e.preventDefault());
+</script>
+
+<!-- ── FOOTER ── -->
+<footer style="
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 4rem;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+">
+  <p style="font-size:13px; color:rgba(255,255,255,0.45); line-height:1.6; max-width:600px;">
+    © 2025 Sahana N · <a href="index.html" style="color:rgba(255,255,255,0.3); text-decoration:none;">automotive-portfolio</a>
+  </p>
+  <p style="font-size:11px; color:rgba(255,255,255,0.2); line-height:1.5; max-width:600px;">
+    All project descriptions, architecture documentation, diagrams, and written content on this page are original work
+    and protected by copyright. Unauthorized reproduction, reuse, or redistribution — in whole or in part — is
+    prohibited. Violations may be reported via
+    <a href="https://github.com/contact/dmca" target="_blank" rel="noopener"
+       style="color:rgba(255,255,255,0.3); text-decoration:none;">GitHub DMCA</a>.
+  </p>
+  <p style="font-size:10px; color:rgba(255,255,255,0.15); font-family:'SF Mono','Fira Mono',monospace; margin-top:0.4rem;">
+    sahanagn.github.io/automotive-portfolio · E/E Architecture Reference
+  </p>
+</footer>
+
+<style>
+  /* Disable text selection sitewide */
+  body { -webkit-user-select: none; user-select: none; }
+  /* Allow selection inside code/pre blocks if you add them later */
+  code, pre { -webkit-user-select: text; user-select: text; }
+</style>
+
+</body>
+</html>
