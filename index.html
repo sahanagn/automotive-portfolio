@@ -1,315 +1,689 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sahana N — Automotive & Robotics AI/ML Engineering Portfolio</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
---bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
---text:#e8e6e3;--text2:#a09d98;--text3:#6b6966;
---accent:#3b82f6;--accent2:#60a5fa;
---green:#22c55e;--amber:#f59e0b;--red:#ef4444;--teal:#14b8a6;--purple:#a78bfa;
---border:#2a2a2a;--border2:#333;
---font:'Source Sans 3',system-ui,sans-serif;
---mono:'JetBrains Mono',monospace;
-}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
-a{color:var(--accent2);text-decoration:none;transition:color .2s}
-a:hover{color:#93c5fd}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sahana N — Automotive & Robotics AI/ML Engineering Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:          #f0ede6;
+      --bg-card:     #faf8f4;
+      --bg-card-alt: #eef2ec;
+      --border:      #d6d0c4;
+      --border-card: #c8c2b6;
+      --text-primary:   #1a1a18;
+      --text-secondary: #4a4843;
+      --text-muted:     #7a756e;
+      --accent-green:   #2d6a4f;
+      --accent-sage:    #52796f;
+      --tag-protocol-bg:  #d4e6df;
+      --tag-protocol-txt: #1f4d3d;
+      --tag-ml-bg:        #e4dff5;
+      --tag-ml-txt:       #3d2d6b;
+      --tag-infra-bg:     #f5ead4;
+      --tag-infra-txt:    #6b4a1a;
+      --status-complete-bg:  #d4ede1;
+      --status-complete-txt: #1a5c38;
+      --status-progress-bg:  #fdefd4;
+      --status-progress-txt: #7a4a10;
+      --shadow-card: 0 2px 8px rgba(45,45,40,0.08), 0 8px 32px rgba(45,45,40,0.05);
+      --shadow-card-hover: 0 4px 16px rgba(45,45,40,0.12), 0 16px 48px rgba(45,45,40,0.08);
+      --radius: 16px;
+    }
 
-.container{max-width:1100px;margin:0 auto;padding:0 24px}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Hero */
-.hero{padding:80px 0 60px;border-bottom:1px solid var(--border)}
-.hero-name{font-size:clamp(36px,7vw,56px);font-weight:700;letter-spacing:-1px;margin-bottom:4px;color:var(--text)}
-.hero-title{font-family:var(--mono);font-size:14px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px}
-.hero-position{font-size:20px;color:var(--text2);max-width:760px;line-height:1.7;margin-bottom:8px}
-.hero-position strong{color:var(--text);font-weight:600}
-.hero-detail{font-size:16px;color:var(--text3);max-width:760px;line-height:1.7}
+    html { scroll-behavior: smooth; }
 
-/* Section */
-.section{padding:60px 0}
-.section-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
-.section h2{font-size:28px;font-weight:600;margin-bottom:32px}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
 
-/* Project cards */
-.projects{display:grid;gap:20px}
-.project-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px 28px 24px;transition:border-color .3s,transform .2s}
-.project-card:hover{border-color:var(--border2);transform:translateY(-2px)}
-.project-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
-.project-num{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--bg3);padding:4px 10px;border-radius:4px;white-space:nowrap}
-.project-status{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px}
-.status-complete{color:var(--green);background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2)}
-.status-progress{color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)}
-.project-card h3{font-size:20px;font-weight:600;margin-bottom:6px}
-.project-subtitle{font-size:14px;color:var(--accent2);font-weight:500;margin-bottom:14px}
-.project-desc{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:20px}
-.project-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-.tag{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
-.tag.proto{border-color:rgba(20,184,166,0.3);color:var(--teal);background:rgba(20,184,166,0.08)}
-.tag.ml{border-color:rgba(167,139,250,0.3);color:var(--purple);background:rgba(167,139,250,0.08)}
-.tag.infra{border-color:rgba(245,158,11,0.25);color:var(--amber);background:rgba(245,158,11,0.06)}
-.project-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;margin-top:16px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;transition:all .2s}
-.project-link:hover{border-color:var(--accent);background:rgba(59,130,246,0.05)}
-.project-link svg{width:14px;height:14px}
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(240, 237, 230, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+      letter-spacing: 0.01em;
+    }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent-green); }
 
-/* Tech stack */
-.tech-categories{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:24px}
-.tech-cat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px}
-.tech-cat h4{font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px}
-.tech-list{list-style:none;display:flex;flex-direction:column;gap:6px}
-.tech-list li{font-size:13px;color:var(--text2)}
+    /* ── HERO ── */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 96px 40px 80px;
+    }
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-sage);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 28px;
+      height: 1.5px;
+      background: var(--accent-sage);
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(3rem, 7vw, 5.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent-green);
+    }
+    .hero-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 32px;
+    }
+    .hero-divider {
+      width: 56px;
+      height: 2px;
+      background: var(--accent-green);
+      margin-bottom: 28px;
+      border-radius: 2px;
+    }
+    .hero p {
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: var(--text-secondary);
+      max-width: 700px;
+      line-height: 1.75;
+    }
+    .hero p strong {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
 
-/* Tag legend */
-.tag-legend{display:flex;gap:16px;margin-bottom:24px;font-size:12px;color:var(--text3);flex-wrap:wrap}
-.tag-legend span{display:flex;align-items:center;gap:6px}
-.legend-dot{width:8px;height:8px;border-radius:50%}
-.legend-proto{background:var(--teal)}
-.legend-ml{background:var(--purple)}
-.legend-infra{background:var(--amber)}
+    /* ── SECTION LABELS ── */
+    .section-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px 100px;
+    }
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 48px;
+      padding-bottom: 16px;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
 
-/* Footer */
-.footer{padding:40px 0;border-top:1px solid var(--border);text-align:center}
-.footer p{font-size:13px;color:var(--text3)}
-.footer a{color:var(--text2)}
+    /* ── TAG LEGEND ── */
+    .tag-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
 
-/* Responsive */
-@media(max-width:768px){
-.hero{padding:48px 0 40px}
-.hero-name{font-size:36px}
-}
-</style>
+    /* ── PROJECT CARDS ── */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+      gap: 24px;
+    }
+
+    .project-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-card);
+      border-radius: var(--radius);
+      padding: 32px 32px 28px;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-sage));
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .project-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--accent-sage);
+    }
+    .project-card:hover::before { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .card-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+    .status-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .status-complete {
+      background: var(--status-complete-bg);
+      color: var(--status-complete-txt);
+    }
+    .status-progress {
+      background: var(--status-progress-bg);
+      color: var(--status-progress-txt);
+    }
+
+    .card-project-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--accent-sage);
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      line-height: 1.25;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    .card-subtitle {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      margin-bottom: 18px;
+      font-style: italic;
+    }
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 18px;
+    }
+    .card-description {
+      font-size: 0.9rem;
+      font-weight: 300;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 22px;
+      flex: 1;
+    }
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 24px;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      padding: 4px 9px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+    }
+    .tag-protocol { background: var(--tag-protocol-bg); color: var(--tag-protocol-txt); }
+    .tag-ml       { background: var(--tag-ml-bg);       color: var(--tag-ml-txt); }
+    .tag-infra    { background: var(--tag-infra-bg);    color: var(--tag-infra-txt); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .card-footer-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+    .btn-repo {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-green);
+      text-decoration: none;
+      padding: 7px 16px;
+      border: 1.5px solid var(--accent-green);
+      border-radius: 8px;
+      letter-spacing: 0.02em;
+      transition: background 0.18s, color 0.18s;
+    }
+    .btn-repo:hover {
+      background: var(--accent-green);
+      color: #fff;
+    }
+    .btn-repo svg { flex-shrink: 0; }
+
+    /* ── TECH STACK ── */
+    .tech-section {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-card);
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow-card);
+    }
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 32px 40px;
+    }
+    .tech-category h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-sage);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tech-category ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tech-category li {
+      font-size: 0.87rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+    .tech-category li::before {
+      content: '→ ';
+      color: var(--accent-green);
+      font-size: 0.75rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1.5px solid var(--border);
+      padding: 32px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-left {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+    .footer-right {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ── LEGEND TAGS ── */
+    .legend-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      nav { padding: 0 20px; }
+      .hero { padding: 64px 20px 56px; }
+      .section-wrap { padding: 0 20px 72px; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2.8rem; }
+      footer { padding: 24px 20px; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">Sahana N</span>
+  <ul class="nav-links">
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="https://github.com/sahanagn" target="_blank" rel="noopener">GitHub ↗</a></li>
+  </ul>
+</nav>
 
 <!-- HERO -->
 <section class="hero">
-<h1 class="hero-name">Sahana N</h1>
-<div class="hero-title">Automotive & Robotics · AI/ML · Embedded Systems</div>
-<p class="hero-position">
-Built across the full <strong>automotive software stack</strong> — from bare-metal ECU firmware to cloud fleet intelligence. Hands-on with <strong>CAN, CAN FD, DoIP, SOME/IP, UDS, AUTOSAR Classic & Adaptive, MQTT, and UPTANE</strong> — the protocols that move data inside a vehicle and between machines and the cloud.
-</p>
-<p class="hero-detail">
-These projects apply that full-stack embedded systems perspective to the problems defining the next generation of autonomous vehicles and robotics: intrusion detection across CAN and Ethernet, predicting component failures from diagnostic and sensor telemetry, managing firmware rollouts across autonomous fleets, and monitoring AD stack health in real time. Each project uses real automotive protocols and standards — not abstractions.
-</p>
+  <div class="hero-eyebrow">Portfolio · Engineering</div>
+  <h1>Sahana <em>N</em></h1>
+  <p class="hero-subtitle">Vehicle Systems · Cloud &amp; Connectivity · Applied AI/ML</p>
+  <div class="hero-divider"></div>
+  <p>
+    Built across the full <strong>automotive software stack</strong> — from bare-metal ECU firmware to cloud fleet intelligence. Hands-on with <strong>CAN, CAN FD, DoIP, SOME/IP, UDS, AUTOSAR Classic &amp; Adaptive, MQTT, and UPTANE</strong> — the protocols that move data inside a vehicle and between machines and the cloud.
+  </p>
+  <br />
+  <p>
+    These projects apply that full-stack embedded systems perspective to the problems defining the next generation of autonomous vehicles and robotics: intrusion detection across CAN and Ethernet, predicting component failures from diagnostic and sensor telemetry, managing firmware rollouts across autonomous fleets, and monitoring AD stack health in real time. Each project uses real automotive protocols and standards — not abstractions.
+  </p>
 </section>
 
 <!-- PROJECTS -->
-<section class="section">
-<div class="section-title">Portfolio</div>
-<h2>Projects</h2>
+<div class="section-wrap" id="projects">
+  <div class="section-header">
+    <span class="section-label">01 /</span>
+    <h2 class="section-title">Projects</h2>
+  </div>
 
-<div class="tag-legend">
-<span><div class="legend-dot legend-proto"></div> Vehicle protocols</span>
-<span><div class="legend-dot legend-ml"></div> ML / AI</span>
-<span><div class="legend-dot legend-infra"></div> Infrastructure</span>
-</div>
+  <div class="tag-legend">
+    <span class="legend-tag tag-protocol">Vehicle Protocols</span>
+    <span class="legend-tag tag-ml">ML / AI</span>
+    <span class="legend-tag tag-infra">Infrastructure</span>
+  </div>
 
-<div class="projects">
+  <div class="projects-grid">
 
-<!-- Project 1 -->
-<div class="project-card">
-<div class="project-header">
-<div class="project-num">01</div>
-<div class="project-status status-complete">COMPLETE</div>
-</div>
-<h3>CAN & Ethernet Intrusion Detection System</h3>
-<div class="project-subtitle">Cybersecurity + Edge ML + Multi-Protocol Vehicle Networking</div>
-<p class="project-desc">
-Multi-protocol IDS covering CAN, DoIP, and SOME/IP with ML-based anomaly detection. Two-stage pipeline: unsupervised anomaly detection using autoencoder and Isolation Forest trained on normal traffic patterns, then supervised classification to identify attack types (DoS, fuzzing, spoofing). Multi-scale temporal feature extraction at 10ms, 100ms, and 500ms windows catches both fast flooding attacks and slow stealthy manipulation. Edge deployed via TFLite Micro on QEMU Cortex-M7 emulator with documented flash, RAM, and latency benchmarks showing the accuracy-resource tradeoff between float32 and INT8 quantized models. Every detection is explainable through SHAP — which protocol feature triggered the alert and why.
-</p>
-<div class="project-tags">
-<span class="tag proto">SocketCAN</span>
-<span class="tag proto">DoIP</span>
-<span class="tag proto">SOME/IP (vsomeip)</span>
-<span class="tag ml">PyTorch</span>
-<span class="tag ml">scikit-learn</span>
-<span class="tag ml">SHAP</span>
-<span class="tag infra">TFLite Micro</span>
-<span class="tag infra">QEMU ARM</span>
-<span class="tag infra">MLflow</span>
-<span class="tag infra">Grafana</span>
-<span class="tag infra">Docker</span>
-</div>
-<a class="project-link" href="#" target="_blank">
-<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-View repository
-</a>
-</div>
+    <!-- Card 1 -->
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">01</span>
+        <span class="status-badge status-complete">Complete</span>
+      </div>
+      <div class="card-project-type">Cybersecurity + Edge ML + Multi-Protocol Vehicle Networking</div>
+      <h3 class="card-title">CAN &amp; Ethernet Intrusion Detection System</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Multi-protocol IDS covering CAN, DoIP, and SOME/IP with ML-based anomaly detection. Two-stage pipeline: unsupervised anomaly detection using autoencoder and Isolation Forest trained on normal traffic patterns, then supervised classification to identify attack types (DoS, fuzzing, spoofing). Multi-scale temporal feature extraction at 10ms, 100ms, and 500ms windows catches both fast flooding attacks and slow stealthy manipulation. Edge deployed via TFLite Micro on QEMU Cortex-M7 emulator with documented flash, RAM, and latency benchmarks. Every detection is explainable through SHAP — which protocol feature triggered the alert and why.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">SocketCAN</span>
+        <span class="tag tag-protocol">DoIP</span>
+        <span class="tag tag-protocol">SOME/IP (vsomeip)</span>
+        <span class="tag tag-ml">PyTorch</span>
+        <span class="tag tag-ml">scikit-learn</span>
+        <span class="tag tag-ml">SHAP</span>
+        <span class="tag tag-ml">TFLite Micro</span>
+        <span class="tag tag-infra">QEMU ARM</span>
+        <span class="tag tag-infra">MLflow</span>
+        <span class="tag tag-infra">Grafana</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">Open Source · All Docker-runnable</span>
+        <a href="#" class="btn-repo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View repository
+        </a>
+      </div>
+    </div>
 
-<!-- Project 2 -->
-<div class="project-card">
-<div class="project-header">
-<div class="project-num">02</div>
-<div class="project-status status-complete">COMPLETE</div>
-</div>
-<h3>Predictive Vehicle Health & Prognostics Platform</h3>
-<div class="project-subtitle">Sensor Telemetry + Diagnostic Intelligence + Fleet Prognostics for Autonomous Vehicles</div>
-<p class="project-desc">
-Fleet-level predictive diagnostics that combines traditional UDS diagnostic data with continuous sensor health telemetry across 17 parameters — camera frame rate and blur, LiDAR point density and calibration drift, radar noise floor, IMU bias drift, compute inference latency, and network packet loss. Streaming ingestion via MQTT into TimescaleDB with data validation. XGBoost predicts component failure within 30 days, while Cox Proportional Hazard survival analysis estimates remaining useful life with confidence intervals. Cross-sensor correlation detects shared root causes — camera and LiDAR degrading simultaneously suggests power or compute issues, not independent sensor faults. An operational decision engine maps predictions to fleet actions: restrict to low-speed routes, schedule calibration, or pull from service. UDS diagnostic server over DoIP lets standard service tools query AI-generated health predictions through established automotive protocols.
-</p>
-<div class="project-tags">
-<span class="tag proto">python-udsoncan</span>
-<span class="tag proto">DoIP</span>
-<span class="tag proto">SOME/IP</span>
-<span class="tag proto">MQTT</span>
-<span class="tag ml">XGBoost</span>
-<span class="tag ml">lifelines (survival)</span>
-<span class="tag ml">SHAP</span>
-<span class="tag infra">TimescaleDB</span>
-<span class="tag infra">FastAPI</span>
-<span class="tag infra">Streamlit</span>
-<span class="tag infra">MLflow</span>
-<span class="tag infra">Docker</span>
-</div>
-<a class="project-link" href="#" target="_blank">
-<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-View repository
-</a>
-</div>
+    <!-- Card 2 -->
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">02</span>
+        <span class="status-badge status-complete">Complete</span>
+      </div>
+      <div class="card-project-type">Sensor Telemetry + Diagnostic Intelligence + Fleet Prognostics</div>
+      <h3 class="card-title">Predictive Vehicle Health &amp; Prognostics Platform</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Fleet-level predictive diagnostics combining traditional UDS diagnostic data with continuous sensor health telemetry across 17 parameters — camera frame rate and blur, LiDAR point density and calibration drift, radar noise floor, IMU bias drift, compute inference latency, and network packet loss. Streaming ingestion via MQTT into TimescaleDB with data validation. XGBoost predicts component failure within 30 days; Cox Proportional Hazard survival analysis estimates remaining useful life with confidence intervals. Cross-sensor correlation detects shared root causes. A UDS diagnostic server over DoIP exposes AI-generated health predictions through standard automotive protocols.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">python-udsoncan</span>
+        <span class="tag tag-protocol">DoIP</span>
+        <span class="tag tag-protocol">SOME/IP</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">XGBoost</span>
+        <span class="tag tag-ml">lifelines (survival)</span>
+        <span class="tag tag-ml">SHAP</span>
+        <span class="tag tag-infra">TimescaleDB</span>
+        <span class="tag tag-infra">FastAPI</span>
+        <span class="tag tag-infra">Streamlit</span>
+        <span class="tag tag-infra">MLflow</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">Open Source · All Docker-runnable</span>
+        <a href="#" class="btn-repo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View repository
+        </a>
+      </div>
+    </div>
 
-<!-- Project 3 -->
-<div class="project-card">
-<div class="project-header">
-<div class="project-num">03</div>
-<div class="project-status status-progress">IN PROGRESS</div>
-</div>
-<h3>Autonomous Fleet OTA Intelligence Platform</h3>
-<div class="project-subtitle">Predictive Risk Scoring + Staged Rollout + Dependency-Aware Rollback</div>
-<p class="project-desc">
-ML-based OTA campaign intelligence for autonomous vehicle and robotics fleets. An eligibility engine checks seven pre-conditions before any vehicle can update — parked state, battery SOC thresholds that vary per ECU, connectivity type matched to package size, and firmware version compatibility critical for delta updates. XGBoost risk scoring predicts update failure probability per vehicle using twelve features including ECU hardware revision history, connectivity stability, and delta vs full image risk. A seven-ECU dependency graph with topological ordering ensures gateway updates before perception, perception before planning. Staged rollout promotes from 1% canary through 10%, 50%, to full fleet with configurable failure rate thresholds and soak times. The rollback engine is dependency-aware — when ECU C fails mid-update, it checks the compatibility matrix to determine if already-updated ECUs A and B can coexist with C's old version, or if cascade rollback is needed. Before executing any rollback, an ML model predicts rollback success probability per ECU. All nine real-world failure modes are simulated — from download timeouts to battery death mid-flash. A/B cohort comparison with statistical significance testing validates post-rollout improvement. Every decision is audit-logged for regulatory compliance.
-</p>
-<div class="project-tags">
-<span class="tag proto">UPTANE</span>
-<span class="tag proto">MQTT</span>
-<span class="tag ml">XGBoost</span>
-<span class="tag ml">SHAP</span>
-<span class="tag ml">SciPy</span>
-<span class="tag infra">NetworkX</span>
-<span class="tag infra">FastAPI</span>
-<span class="tag infra">Streamlit</span>
-<span class="tag infra">PostgreSQL</span>
-<span class="tag infra">MLflow</span>
-<span class="tag infra">Docker</span>
-</div>
-<a class="project-link" href="#" target="_blank">
-<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-View repository
-</a>
-</div>
+    <!-- Card 3 -->
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">03</span>
+        <span class="status-badge status-progress">In Progress</span>
+      </div>
+      <div class="card-project-type">Predictive Risk Scoring + Staged Rollout + Dependency-Aware Rollback</div>
+      <h3 class="card-title">Autonomous Fleet OTA Intelligence Platform</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        ML-based OTA campaign intelligence for autonomous vehicle and robotics fleets. An eligibility engine checks seven pre-conditions before any vehicle can update — parked state, battery SOC thresholds, connectivity type, and firmware version compatibility. XGBoost risk scoring predicts update failure probability per vehicle using twelve features. A seven-ECU dependency graph with topological ordering ensures gateway updates before perception, perception before planning. Staged rollout promotes from 1% canary through 10%, 50%, to full fleet. The rollback engine is dependency-aware — checking the compatibility matrix before cascade rollback. All nine real-world failure modes simulated, with A/B cohort comparison and audit logging for regulatory compliance.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">UPTANE</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">XGBoost</span>
+        <span class="tag tag-ml">SHAP</span>
+        <span class="tag tag-ml">SciPy</span>
+        <span class="tag tag-infra">NetworkX</span>
+        <span class="tag tag-infra">FastAPI</span>
+        <span class="tag tag-infra">Streamlit</span>
+        <span class="tag tag-infra">PostgreSQL</span>
+        <span class="tag tag-infra">MLflow</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">Open Source · All Docker-runnable</span>
+        <a href="#" class="btn-repo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View repository
+        </a>
+      </div>
+    </div>
 
-<!-- Project 4 (AD Safety Monitor) -->
-<div class="project-card">
-<div class="project-header">
-<div class="project-num">04</div>
-<div class="project-status status-progress">IN PROGRESS</div>
-</div>
-<h3>Autonomous Vehicle Real-Time Safety Monitor</h3>
-<div class="project-subtitle">On-Vehicle AD Stack Health Monitoring + ISO 26262 Safety Response + UDS/DoIP Diagnostics</div>
-<p class="project-desc">
-Real-time on-vehicle safety monitor for an autonomous driving stack built on ROS2. Five sensor health monitors run at 10Hz tracking camera frame rate and blur, LiDAR point density and calibration drift, radar detection consistency, compute inference latency, and network message integrity. A diagnostic aggregator uses rolling z-score anomaly detection — not heavy ML, because this runs on-vehicle with a 5ms latency budget. Cross-sensor correlation distinguishes shared root causes from isolated faults — camera and LiDAR degrading simultaneously triggers an ASIL D response because it suggests power failure, not independent sensor issues. The safety response engine maps health scores to ISO 26262 aligned degradation levels with hysteresis to prevent oscillation: nominal operation, reduced operational design domain, minimal risk condition, or immediate safe stop. A UDS diagnostic server over DoIP exposes AD-specific DTCs and health data through standard automotive protocols — the same interface every service center uses. SOME/IP health reporting lets other vehicle ECUs subscribe to AD health status. Fleet telemetry uplink streams events via MQTT in a schema compatible with the Predictive Diagnostics platform. Validated across six degradation scenarios with measured detection latency, false positive rates, and response times.
-</p>
-<div class="project-tags">
-<span class="tag proto">ROS2</span>
-<span class="tag proto">python-udsoncan</span>
-<span class="tag proto">DoIP</span>
-<span class="tag proto">SOME/IP</span>
-<span class="tag proto">MQTT</span>
-<span class="tag ml">ISO 26262</span>
-<span class="tag infra">OpenCV</span>
-<span class="tag infra">Open3D</span>
-<span class="tag infra">nuScenes</span>
-<span class="tag infra">Docker</span>
-</div>
-<a class="project-link" href="#" target="_blank">
-<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-View repository
-</a>
-</div>
+    <!-- Card 4 -->
+    <div class="project-card">
+      <div class="card-top">
+        <span class="card-number">04</span>
+        <span class="status-badge status-progress">In Progress</span>
+      </div>
+      <div class="card-project-type">On-Vehicle AD Stack Health Monitoring + ISO 26262 Safety Response</div>
+      <h3 class="card-title">Autonomous Vehicle Real-Time Safety Monitor</h3>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Real-time on-vehicle safety monitor for an autonomous driving stack built on ROS2. Five sensor health monitors run at 10Hz tracking camera, LiDAR, radar, compute latency, and network integrity. A diagnostic aggregator uses rolling z-score anomaly detection with a 5ms latency budget. Cross-sensor correlation distinguishes shared root causes from isolated faults. The safety response engine maps health scores to ISO 26262-aligned degradation levels with hysteresis: nominal, reduced ODD, minimal risk condition, or immediate safe stop. A UDS diagnostic server over DoIP exposes AD-specific DTCs. Validated across six degradation scenarios with measured detection latency, false positive rates, and response times.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">ROS2</span>
+        <span class="tag tag-protocol">python-udsoncan</span>
+        <span class="tag tag-protocol">DoIP</span>
+        <span class="tag tag-protocol">SOME/IP</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">ISO 26262</span>
+        <span class="tag tag-ml">OpenCV</span>
+        <span class="tag tag-ml">Open3D</span>
+        <span class="tag tag-ml">nuScenes</span>
+        <span class="tag tag-infra">Docker</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">Open Source · All Docker-runnable</span>
+        <a href="#" class="btn-repo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View repository
+        </a>
+      </div>
+    </div>
 
+  </div>
 </div>
-</section>
 
 <!-- TECH STACK -->
-<section class="section" style="border-top:1px solid var(--border)">
-<div class="section-title">Technology</div>
-<h2>Tech stack</h2>
-<div class="tech-categories">
-<div class="tech-cat">
-<h4>Vehicle Protocols</h4>
-<ul class="tech-list">
-<li>SocketCAN / python-can</li>
-<li>python-udsoncan (ISO 14229)</li>
-<li>python-doip (ISO 13400)</li>
-<li>vsomeip (SOME/IP)</li>
-<li>MQTT (Mosquitto)</li>
-<li>UPTANE framework</li>
-</ul>
+<div class="section-wrap" id="stack">
+  <div class="section-header">
+    <span class="section-label">02 /</span>
+    <h2 class="section-title">Tech Stack</h2>
+  </div>
+  <div class="tech-section">
+    <div class="tech-grid">
+      <div class="tech-category">
+        <h4>Vehicle Protocols</h4>
+        <ul>
+          <li>SocketCAN / python-can</li>
+          <li>python-udsoncan (ISO 14229)</li>
+          <li>python-doip (ISO 13400)</li>
+          <li>vsomeip (SOME/IP)</li>
+          <li>MQTT (Mosquitto)</li>
+          <li>UPTANE framework</li>
+        </ul>
+      </div>
+      <div class="tech-category">
+        <h4>ML / AI</h4>
+        <ul>
+          <li>PyTorch</li>
+          <li>XGBoost</li>
+          <li>scikit-learn</li>
+          <li>lifelines (survival analysis)</li>
+          <li>SHAP (explainability)</li>
+          <li>Optuna</li>
+          <li>MLflow</li>
+        </ul>
+      </div>
+      <div class="tech-category">
+        <h4>Edge / Embedded</h4>
+        <ul>
+          <li>TFLite Micro</li>
+          <li>ONNX Runtime</li>
+          <li>QEMU ARM (Cortex-M7)</li>
+          <li>GCC ARM toolchain</li>
+        </ul>
+      </div>
+      <div class="tech-category">
+        <h4>AD / Robotics</h4>
+        <ul>
+          <li>ROS2 Humble</li>
+          <li>OpenCV</li>
+          <li>Open3D</li>
+          <li>nuScenes dataset</li>
+        </ul>
+      </div>
+      <div class="tech-category">
+        <h4>Backend / Data</h4>
+        <ul>
+          <li>FastAPI</li>
+          <li>PostgreSQL</li>
+          <li>TimescaleDB</li>
+          <li>Streamlit</li>
+          <li>Grafana + InfluxDB</li>
+        </ul>
+      </div>
+      <div class="tech-category">
+        <h4>Infrastructure</h4>
+        <ul>
+          <li>Docker + Compose</li>
+          <li>GitHub Actions (CI/CD)</li>
+          <li>pytest</li>
+          <li>ruff</li>
+          <li>NetworkX</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top: 32px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em;">
+      All projects built with open source tools. Every project independently Docker-runnable.
+    </p>
+  </div>
 </div>
-<div class="tech-cat">
-<h4>ML / AI</h4>
-<ul class="tech-list">
-<li>PyTorch</li>
-<li>XGBoost</li>
-<li>scikit-learn</li>
-<li>lifelines (survival analysis)</li>
-<li>SHAP (explainability)</li>
-<li>Optuna</li>
-<li>MLflow</li>
-</ul>
-</div>
-<div class="tech-cat">
-<h4>Edge / Embedded</h4>
-<ul class="tech-list">
-<li>TFLite Micro</li>
-<li>ONNX Runtime</li>
-<li>QEMU ARM (Cortex-M7)</li>
-<li>GCC ARM toolchain</li>
-</ul>
-</div>
-<div class="tech-cat">
-<h4>AD / Robotics</h4>
-<ul class="tech-list">
-<li>ROS2 Humble</li>
-<li>OpenCV</li>
-<li>Open3D</li>
-<li>nuScenes dataset</li>
-</ul>
-</div>
-<div class="tech-cat">
-<h4>Backend / Data</h4>
-<ul class="tech-list">
-<li>FastAPI</li>
-<li>PostgreSQL</li>
-<li>TimescaleDB</li>
-<li>Streamlit</li>
-<li>Grafana + InfluxDB</li>
-</ul>
-</div>
-<div class="tech-cat">
-<h4>Infrastructure</h4>
-<ul class="tech-list">
-<li>Docker + Compose</li>
-<li>GitHub Actions (CI/CD)</li>
-<li>pytest</li>
-<li>ruff</li>
-<li>NetworkX</li>
-</ul>
-</div>
-</div>
-</section>
 
 <!-- FOOTER -->
-<footer class="footer">
-<p>All projects built with open source tools. Every project independently Docker-runnable.</p>
-<p style="margin-top:8px;color:var(--text2)">Embedded Systems · Vehicle & Robotics Software · AI/ML for Autonomous Platforms</p>
+<footer>
+  <span class="footer-left">Embedded Systems · Vehicle &amp; Robotics Software · AI/ML for Autonomous Platforms</span>
+  <span class="footer-right"><a href="https://github.com/sahanagn" style="color: var(--accent-green); text-decoration: none;" target="_blank">github.com/sahanagn ↗</a></span>
 </footer>
 
-</div>
 </body>
 </html>
