@@ -603,6 +603,57 @@
   </div>
 </div>
 
+<!-- KNOWLEDGE BASE -->
+<div class="section-wrap" id="reference">
+  <div class="section-header">
+    <span class="section-label">01.5 /</span>
+    <h2 class="section-title">Knowledge Base</h2>
+  </div>
+  <div class="projects-grid">
+
+    <div class="project-card" style="grid-column: 1 / -1; cursor: pointer;" onclick="window.location.href='ee-architecture.html'">
+      <div class="card-top">
+        <span class="card-number">REF — 01</span>
+        <span class="status-badge status-complete">Interactive Reference</span>
+      </div>
+      <div class="card-project-type">E/E Architecture · SDV · Full Vehicle Stack</div>
+      <h3 class="card-title">E/E Architecture & SDV Reference</h3>
+      <p class="card-subtitle">Sensor to Cloud — Distributed → Domain → Zonal → Central Compute</p>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        An interactive technical reference covering the full automotive software stack. Seven sections with clickable diagrams:
+        E/E architecture evolution across four eras with protocol and middleware changes annotated at each stage;
+        protocol mapping from CAN FD and LIN at the sensor layer through SOME/IP middleware to MQTT fleet uplink;
+        a full SDV stack diagram from cloud fleet backend to physical actuators with all four portfolio projects
+        overlaid at their architectural layer; AUTOSAR Classic vs Adaptive side-by-side across OS, language, comms,
+        diagnostics, and OTA; OTA update lifecycle from package build through UPTANE staging to dependency-aware rollback;
+        and SDV key concepts including service-oriented architecture, hardware-software decoupling, and vehicle abstraction layer.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">CAN / CAN FD</span>
+        <span class="tag tag-protocol">SOME/IP</span>
+        <span class="tag tag-protocol">UDS / DoIP</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-protocol">UPTANE</span>
+        <span class="tag tag-ml">AUTOSAR Classic</span>
+        <span class="tag tag-ml">AUTOSAR Adaptive</span>
+        <span class="tag tag-ml">ISO 26262</span>
+        <span class="tag tag-infra">SDV Architecture</span>
+        <span class="tag tag-infra">OTA Lifecycle</span>
+        <span class="tag tag-infra">Zonal / Domain / Central</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">8+ yrs · NIO · Karma · Bosch · Gateway ECUs · OTA · Diagnostics</span>
+        <a href="ee-architecture.html" class="btn-repo" onclick="event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Explore reference
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- TECH STACK -->
 <div class="section-wrap" id="stack">
   <div class="section-header">
@@ -681,9 +732,37 @@
 
 <!-- FOOTER -->
 <footer>
-  <span class="footer-left">Embedded Systems · Vehicle &amp; Robotics Software · AI/ML for Autonomous Platforms</span>
-  <span class="footer-right"><a href="https://github.com/sahanagn" style="color: var(--accent-green); text-decoration: none;" target="_blank">github.com/sahanagn ↗</a></span>
+  <div style="width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+    <span class="footer-left">Embedded Systems · Vehicle &amp; Robotics Software · AI/ML for Autonomous Platforms</span>
+    <span class="footer-right"><a href="https://github.com/sahanagn" style="color: var(--accent-green); text-decoration: none;" target="_blank">github.com/sahanagn ↗</a></span>
+  </div>
+  <div style="width:100%; border-top:1px solid var(--border); padding-top:16px; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <span style="font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--text-muted); letter-spacing:0.06em;">
+      © 2025 Sahana N · All rights reserved
+    </span>
+    <span style="font-size:0.72rem; color:var(--text-muted); line-height:1.6; max-width:520px; text-align:right;">
+      Project descriptions, architecture documentation, and written content are original work protected by copyright.
+      Unauthorized reproduction or reuse is prohibited.
+      Infringement may be reported via
+      <a href="https://github.com/contact/dmca" target="_blank" rel="noopener"
+         style="color:var(--accent-sage); text-decoration:none;">GitHub DMCA ↗</a>
+    </span>
+  </div>
 </footer>
+
+<script>
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && ['u','s','a','c','p'].includes(k)) e.preventDefault();
+    if (e.key === 'F12') e.preventDefault();
+  });
+  document.addEventListener('dragstart', e => e.preventDefault());
+</script>
+<style>
+  body { -webkit-user-select: none; user-select: none; }
+  code, pre { -webkit-user-select: text; user-select: text; }
+</style>
 
 </body>
 </html>
