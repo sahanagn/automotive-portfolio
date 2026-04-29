@@ -659,6 +659,83 @@
       </div>
     </div>
 
+    <div class="project-card" style="grid-column: 1 / -1; cursor: pointer;" onclick="window.location.href='safety-monitor-architecture.html'">
+      <div class="card-top">
+        <span class="card-number">REF — 02</span>
+        <span class="status-badge status-complete">Architecture Walkthrough</span>
+      </div>
+      <div class="card-project-type">ISO 26262 ASIL D · Fault Management · ROS2 · On-Vehicle Safety</div>
+      <h3 class="card-title">AD Safety Monitor — Architecture Deep Dive</h3>
+      <p class="card-subtitle">Sensor Health → Fault Detection → Cross-Sensor Correlation → Safety Response</p>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Interactive architecture walkthrough for the AD Real-Time Safety Monitor. Covers the full four-stage fault management pipeline:
+        five sensor health monitors running at 10Hz, three-mechanism fault detection (watchdogs, thresholds, rolling z-score),
+        cross-sensor correlation engine with voting logic and shared root cause detection,
+        and the ISO 26262 ASIL D state machine with asymmetric hysteresis across four degradation levels
+        (nominal, reduced ODD, minimal risk condition, immediate safe stop).
+        Includes the complete FMEA table with ASIL ratings per fault mode, six fault injection scenarios with
+        measured detection latency and false-positive rates, and key design decisions covering ROS2 lifecycle nodes,
+        UDS/DoIP diagnostic integration, and MQTT fleet telemetry.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">ROS2</span>
+        <span class="tag tag-protocol">UDS / DoIP</span>
+        <span class="tag tag-protocol">SOME/IP</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">ISO 26262</span>
+        <span class="tag tag-ml">ASIL A–D</span>
+        <span class="tag tag-ml">FMEA</span>
+        <span class="tag tag-infra">State Machine</span>
+        <span class="tag tag-infra">Fault Injection</span>
+        <span class="tag tag-infra">nuScenes</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">Project 04 · Fault Management System Design · Architecture Reference</span>
+        <a href="safety-monitor-architecture.html" class="btn-repo" onclick="event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Explore architecture
+        </a>
+      </div>
+    </div>
+
+    <div class="project-card" style="grid-column: 1 / -1; cursor: pointer;" onclick="window.location.href='ota-architecture.html'">
+      <div class="card-top">
+        <span class="card-number">REF — 03</span>
+        <span class="status-badge status-complete">Architecture Walkthrough</span>
+      </div>
+      <div class="card-project-type">Fleet OTA · Fault Recovery · ML Risk Scoring · Dependency Orchestration</div>
+      <h3 class="card-title">OTA Intelligence — Architecture Deep Dive</h3>
+      <p class="card-subtitle">Eligibility → Risk Scoring → Staged Rollout → Dependency Orchestration → Rollback</p>
+      <div class="card-divider"></div>
+      <p class="card-description">
+        Interactive architecture walkthrough for the Autonomous Fleet OTA Intelligence Platform. Covers the full
+        intelligence pipeline: 7-condition eligibility gating, XGBoost risk scoring with SHAP explainability,
+        four-stage rollout with auto-promote/pause/stop thresholds, 7-ECU dependency graph with NetworkX
+        topological ordering, and dependency-aware cascade rollback with ML-predicted success probability.
+        Includes the complete nine failure mode table (download timeout through vehicle-drove-away-mid-flash),
+        MQTT fleet monitoring, A/B cohort comparison with statistical validation, and key design decisions.
+      </p>
+      <div class="card-tags">
+        <span class="tag tag-protocol">UPTANE</span>
+        <span class="tag tag-protocol">MQTT</span>
+        <span class="tag tag-ml">XGBoost</span>
+        <span class="tag tag-ml">SHAP</span>
+        <span class="tag tag-ml">SciPy</span>
+        <span class="tag tag-infra">NetworkX</span>
+        <span class="tag tag-infra">FastAPI</span>
+        <span class="tag tag-infra">PostgreSQL</span>
+        <span class="tag tag-infra">MLflow</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-footer-label">Project 03 · OTA Fault &amp; Recovery Architecture · 9 Failure Modes</span>
+        <a href="ota-architecture.html" class="btn-repo" onclick="event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Explore architecture
+        </a>
+      </div>
+    </div>
+
   </div>
 </div>
 
