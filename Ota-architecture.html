@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTA Intelligence Platform — Architecture Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #f0ede6;
+  --bg2: #e8e4dc;
+  --bg3: #ffffff;
+  --text: #1a1a1a;
+  --text2: #555;
+  --text3: #888;
+  --accent: #2d5016;
+  --accent2: #3d6a2f;
+  --accent-light: #e8f0e2;
+  --border: #d4d0c8;
+  --border2: #c8c4bc;
+  --red: #9b2c2c;
+  --red-light: #fef2f2;
+  --orange: #92400e;
+  --orange-light: #fef3c7;
+  --blue: #1e40af;
+  --blue-light: #eff6ff;
+  --purple: #6d28d9;
+  --purple-light: #ede9fe;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(240,237,230,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 2rem;
+  display: flex; align-items: center; gap: 1.5rem;
+  font-size: 13px;
+}
+nav a { color: var(--text2); text-decoration: none; transition: color 0.2s; }
+nav a:hover { color: var(--accent); }
+nav .brand { font-family: var(--serif); font-size: 15px; color: var(--text); margin-right: auto; }
+
+/* HERO */
+.hero {
+  max-width: 860px; margin: 0 auto;
+  padding: 4rem 2rem 3rem;
+}
+.hero-eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: var(--serif); font-size: clamp(28px, 5vw, 42px);
+  font-weight: 400; line-height: 1.2; margin-bottom: 1rem;
+}
+.hero h1 em { font-style: italic; color: var(--accent2); }
+.hero-sub {
+  font-size: 15px; color: var(--text2); max-width: 640px; line-height: 1.7;
+}
+.hero-tags {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.25rem;
+}
+.hero-tags span {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 3px;
+  background: var(--accent-light); color: var(--accent);
+}
+
+/* SECTIONS */
+.content { max-width: 860px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+.section-header {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 1.5rem; padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+}
+
+.prose { font-size: 14.5px; color: var(--text); line-height: 1.75; margin-bottom: 1.5rem; }
+.prose strong { font-weight: 600; }
+
+/* FLOW DIAGRAM */
+.arch-diagram {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;
+  overflow-x: auto;
+}
+.flow-container {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; padding: 1rem 0;
+}
+.flow-node {
+  background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 12px 20px; text-align: center;
+  max-width: 520px; width: 100%;
+}
+.flow-node .fn-title { font-family: var(--serif); font-size: 14px; }
+.flow-node .fn-detail { font-size: 11.5px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+.flow-arrow-down {
+  display: flex; flex-direction: column; align-items: center;
+  color: var(--text3); padding: 2px 0;
+}
+.flow-arrow-down .fa-line { width: 2px; height: 14px; background: var(--border2); }
+.flow-arrow-down .fa-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  padding: 1px 0;
+}
+.flow-branches {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  width: 100%; max-width: 520px;
+}
+.flow-branches .flow-node { max-width: none; }
+
+/* LAYER CARDS */
+.layer {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 1rem;
+  overflow: hidden; transition: border-color 0.2s;
+}
+.layer:hover { border-color: var(--accent); }
+.layer-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 1rem 1.25rem; cursor: pointer; user-select: none;
+}
+.layer-icon {
+  width: 36px; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.layer-icon.eligibility { background: #dbeafe; color: #1e40af; }
+.layer-icon.risk { background: #ede9fe; color: #6d28d9; }
+.layer-icon.rollout { background: #fef3c7; color: #92400e; }
+.layer-icon.dependency { background: #e8f0e2; color: #2d5016; }
+.layer-icon.rollback { background: #fef2f2; color: #9b2c2c; }
+.layer-icon.monitor { background: #e0f2fe; color: #0369a1; }
+.layer-icon.cohort { background: #fce7f3; color: #9d174d; }
+.layer-icon.decision { background: #fef3c7; color: #92400e; }
+
+.layer-info { flex: 1; }
+.layer-title { font-family: var(--serif); font-size: 16px; }
+.layer-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.layer-chevron {
+  font-size: 12px; color: var(--text3); transition: transform 0.25s;
+  font-family: var(--mono);
+}
+.layer.open .layer-chevron { transform: rotate(90deg); }
+
+.layer-body {
+  display: none; padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.layer.open .layer-body { display: block; padding-top: 1rem; }
+
+.layer-body p { font-size: 13.5px; color: var(--text); line-height: 1.7; margin-bottom: 0.75rem; }
+
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.75rem;
+}
+.detail-item {
+  background: var(--bg); border-radius: 6px; padding: 10px 12px;
+}
+.detail-item .label {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text3); margin-bottom: 4px;
+}
+.detail-item .value { font-size: 13px; color: var(--text); font-weight: 500; }
+
+/* DEPENDENCY GRAPH */
+.dep-graph {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; margin: 1.25rem 0; padding: 1.25rem;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+}
+.dep-row {
+  display: flex; gap: 16px; align-items: center; justify-content: center;
+  flex-wrap: wrap;
+}
+.dep-node {
+  padding: 10px 16px; border-radius: 8px; text-align: center;
+  border: 2px solid; min-width: 130px;
+}
+.dep-node .dn-name { font-family: var(--serif); font-size: 13px; }
+.dep-node .dn-order { font-family: var(--mono); font-size: 10px; margin-top: 3px; }
+.dep-gateway { background: #f0fdf4; border-color: #22c55e; color: #14532d; }
+.dep-perception { background: #eff6ff; border-color: #3b82f6; color: #1e3a5f; }
+.dep-planning { background: #ede9fe; border-color: #8b5cf6; color: #3b1f7a; }
+.dep-vcu { background: #fef2f2; border-color: #ef4444; color: #7f1d1d; }
+.dep-body { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
+.dep-independent { background: var(--bg); border-color: var(--border); color: var(--text2); }
+
+.dep-arrow {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  padding: 4px 0;
+}
+
+/* FAILURE MODE TABLE */
+.fm-table {
+  width: 100%; border-collapse: collapse; margin-top: 1rem;
+  font-size: 12.5px;
+}
+.fm-table thead th {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text3);
+  padding: 8px 10px; text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+.fm-table tbody td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.severity-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 3px; display: inline-block;
+}
+.sev-critical { background: #fef2f2; color: #7f1d1d; border: 1px solid #fecaca; }
+.sev-high { background: #fff1f2; color: #9f1239; }
+.sev-medium { background: #fef3c7; color: #92400e; }
+.sev-low { background: #dbeafe; color: #1e40af; }
+
+/* STAGE CARDS */
+.stage-pipeline {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; margin: 1.25rem 0;
+}
+.stage-node {
+  width: 320px; padding: 14px 18px;
+  border-radius: 8px; text-align: center;
+  border: 2px solid; position: relative;
+}
+.stage-node .sn-name { font-family: var(--serif); font-size: 15px; margin-bottom: 3px; }
+.stage-node .sn-desc { font-size: 11.5px; line-height: 1.5; }
+.stage-node .sn-pct {
+  font-family: var(--mono); font-size: 10px; margin-top: 5px; opacity: 0.7;
+}
+
+.stage-canary { background: #f0fdf4; border-color: #22c55e; color: #14532d; }
+.stage-early { background: #eff6ff; border-color: #3b82f6; color: #1e3a5f; }
+.stage-half { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
+.stage-full { background: #ede9fe; border-color: #8b5cf6; color: #3b1f7a; }
+
+.stage-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 3px 0; color: var(--text3);
+}
+.stage-arrow .sa-line { width: 2px; height: 12px; background: var(--border2); }
+.stage-arrow .sa-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  padding: 1px 8px; white-space: nowrap;
+}
+
+/* ROLLBACK DIAGRAM */
+.rollback-box {
+  border: 1px dashed var(--red); border-radius: 8px;
+  padding: 14px 16px; margin-top: 1rem; background: var(--red-light);
+}
+.rollback-box .rb-title {
+  font-family: var(--mono); font-size: 11px; color: var(--red);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.rollback-box p { font-size: 12.5px; color: var(--text); line-height: 1.6; }
+
+.success-box {
+  border: 1px dashed var(--accent); border-radius: 8px;
+  padding: 14px 16px; margin-top: 0.75rem; background: var(--accent-light);
+}
+.success-box .sb-title {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.success-box p { font-size: 12.5px; color: var(--text); line-height: 1.6; }
+
+/* CALLOUT */
+.callout {
+  background: var(--orange-light); border: 1px solid #fcd34d; border-radius: 6px;
+  padding: 12px 16px; margin: 1rem 0;
+  font-size: 12.5px; color: #78350f; line-height: 1.6;
+}
+.callout strong { font-weight: 600; }
+
+/* FOOTER */
+footer {
+  max-width: 860px; margin: 0 auto;
+  padding: 2rem; text-align: center;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text3);
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  nav { padding: 0.6rem 1rem; }
+  .hero, .content { padding-left: 1rem; padding-right: 1rem; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .flow-branches { grid-template-columns: 1fr; }
+  .dep-row { flex-direction: column; }
+  .stage-node { width: 100%; }
+  .fm-table { font-size: 11px; }
+  .fm-table thead th, .fm-table tbody td { padding: 6px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://sahanagn.github.io/automotive-portfolio/index.html" class="brand">Sahana N</a>
+  <a href="https://sahanagn.github.io/automotive-portfolio/index.html#projects">Projects</a>
+  <a href="https://sahanagn.github.io/automotive-portfolio/ee-architecture.html">E/E Reference</a>
+  <a href="https://github.com/sahanagn" target="_blank">GitHub ↗</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Project 03 · Architecture Walkthrough</div>
+  <h1>Autonomous Fleet <em>OTA Intelligence</em></h1>
+  <p class="hero-sub">
+    ML-powered OTA campaign intelligence for autonomous vehicle fleets. Eligibility gating,
+    XGBoost risk scoring, staged rollout with auto-promote/pause/stop, 7-ECU dependency
+    orchestration with topological ordering, dependency-aware cascade rollback, and A/B cohort
+    comparison. Nine real-world failure modes handled end-to-end.
+  </p>
+  <div class="hero-tags">
+    <span>UPTANE</span>
+    <span>MQTT</span>
+    <span>XGBoost</span>
+    <span>SHAP</span>
+    <span>NetworkX</span>
+    <span>FastAPI</span>
+    <span>PostgreSQL</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- SECTION 1: THE PROBLEM -->
+  <div class="section-header" id="problem">
+    <span class="section-num">01 /</span>
+    <h2>The Problem</h2>
+  </div>
+
+  <p class="prose">
+    An autonomous fleet of 5,000 vehicles, each with 7 ECUs running different firmware versions
+    on different hardware revisions. A single bad OTA push can brick hundreds of vehicles overnight.
+    Perception AI crashes on boot, brakes ECU won't respond, gateway firmware corrupted mid-flash.
+    <strong>This actually happens.</strong>
+  </p>
+  <p class="prose">
+    You can't just push firmware to everyone. Vehicle A has 20% battery and will die mid-flash.
+    Vehicle B is driving on a highway. Vehicle C has old hardware with a 23% historical failure rate.
+    Vehicle D has a source version mismatch for delta updates. Vehicle E is in rural Montana on
+    cellular only, too slow for a full image download. You need intelligence between "firmware is ready"
+    and "firmware is installed."
+  </p>
+
+  <!-- SECTION 2: INTELLIGENCE PIPELINE -->
+  <div class="section-header" id="pipeline">
+    <span class="section-num">02 /</span>
+    <h2>Intelligence Pipeline</h2>
+  </div>
+
+  <p class="prose">Click any stage to expand its design details.</p>
+
+  <div class="arch-diagram">
+    <div class="flow-container">
+      <div class="flow-node" style="border-color: var(--accent); background: var(--accent-light);">
+        <div class="fn-title">New Firmware Available</div>
+        <div class="fn-detail">UPTANE dual-repo validated, signed, integrity-checked</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">per-vehicle evaluation</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: var(--blue);">
+        <div class="fn-title">1. Eligibility Engine</div>
+        <div class="fn-detail">7 pre-conditions gating: parked, battery, connectivity, diagnostics, version</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">eligible vehicles only</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: var(--purple);">
+        <div class="fn-title">2. Risk Scoring (XGBoost)</div>
+        <div class="fn-detail">12-feature ML model, per-vehicle risk 0-100, SHAP explanation</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">sorted by risk score</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: var(--orange);">
+        <div class="fn-title">3. Staged Rollout</div>
+        <div class="fn-detail">1% canary → 10% → 50% → 100%, auto-promote/pause/stop</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">per-vehicle ECU sequence</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: var(--accent);">
+        <div class="fn-title">4. ECU Dependency Orchestration</div>
+        <div class="fn-detail">7-ECU topological sort: Gateway → Perception → Planning → VCU</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">flash sequence executes</div><div class="fa-line"></div></div>
+      <div class="flow-branches">
+        <div class="flow-node" style="border-color: var(--accent); background: #f0fdf4;">
+          <div class="fn-title">Success</div>
+          <div class="fn-detail">Verify, report, A/B cohort</div>
+        </div>
+        <div class="flow-node" style="border-color: var(--red); background: var(--red-light);">
+          <div class="fn-title">Failure</div>
+          <div class="fn-detail">Rollback engine, cascade logic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ELIGIBILITY ENGINE -->
+  <div class="layer" id="layer-eligibility">
+    <div class="layer-header" onclick="toggleLayer('layer-eligibility')">
+      <div class="layer-icon eligibility">🔒</div>
+      <div class="layer-info">
+        <div class="layer-title">Eligibility Engine</div>
+        <div class="layer-sub">7 pre-conditions checked per vehicle before any update attempt</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Every vehicle must pass all seven checks before it's allowed into the update pipeline.
+        A single failure blocks the vehicle with a logged reason. This is the first and cheapest
+        line of defence: you don't waste risk scoring compute on a vehicle that's driving on
+        a highway or has 15% battery.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">1. Vehicle State</div>
+          <div class="value">Must be parked with ignition off (gear in P)</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">2. Battery SOC</div>
+          <div class="value">&gt; 60% for gateway/perception, &gt; 40% for infotainment</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">3. Connectivity</div>
+          <div class="value">WiFi required for full images, cellular OK for delta only</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">4. Diagnostics</div>
+          <div class="value">No active diagnostic session (UDS 0x10 non-default)</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">5. FW Compatibility</div>
+          <div class="value">Current version must be in the update's source version list</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">6. HW Revision</div>
+          <div class="value">Target firmware must support this hardware revision</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">7. Campaign Window</div>
+          <div class="value">Must be within the campaign's scheduled rollout window</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Output</div>
+          <div class="value">Eligible / Blocked + specific reason code for audit log</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RISK SCORING -->
+  <div class="layer" id="layer-risk">
+    <div class="layer-header" onclick="toggleLayer('layer-risk')">
+      <div class="layer-icon risk">📊</div>
+      <div class="layer-info">
+        <div class="layer-title">Risk Scoring Engine (XGBoost)</div>
+        <div class="layer-sub">12-feature ML model predicts per-vehicle update failure probability</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        For each eligible vehicle, an XGBoost classifier predicts the probability of update failure.
+        The model is trained on historical update outcomes across the fleet. SHAP values explain
+        every prediction: "High risk because HW Rev 1 has a 23% historical fail rate, delta update
+        with uncertain version history, and declining battery SOC trend."
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Feature 1-3</div>
+          <div class="value">Historical failure rate per ECU HW revision, connectivity stability, battery SOC trend</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Feature 4-6</div>
+          <div class="value">Delta vs full image, versions behind count, geographic region</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Feature 7-9</div>
+          <div class="value">Time since last successful update, concurrent ECU count, vehicle age</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Feature 10-12</div>
+          <div class="value">Ambient temperature, previous rollback count, flash partition health</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Output</div>
+          <div class="value">Risk score 0-100 + SHAP feature importance per prediction</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Model Tracking</div>
+          <div class="value">MLflow experiment tracking, versioned models, metrics history</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGED ROLLOUT -->
+  <div class="layer open" id="layer-rollout">
+    <div class="layer-header" onclick="toggleLayer('layer-rollout')">
+      <div class="layer-icon rollout">🚀</div>
+      <div class="layer-info">
+        <div class="layer-title">Staged Rollout</div>
+        <div class="layer-sub">1% canary → 10% → 50% → 100% with auto-promote/pause/stop</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Eligible vehicles are sorted by risk score (lowest risk first) and deployed in four stages.
+        Each stage runs for a configurable hold period, during which the monitor watches failure rate.
+        Promotion, pause, and stop decisions are automatic based on observed failure rate thresholds.
+      </p>
+
+      <div class="stage-pipeline">
+        <div class="stage-node stage-canary">
+          <div class="sn-name">Stage 1: Canary</div>
+          <div class="sn-desc">Lowest-risk 1% of fleet. Prove the update works on real hardware.</div>
+          <div class="sn-pct">1% of fleet · 48hr hold</div>
+        </div>
+        <div class="stage-arrow">
+          <div class="sa-line"></div>
+          <div class="sa-label">failure rate &lt; 2%? promote ↓</div>
+          <div class="sa-line"></div>
+        </div>
+        <div class="stage-node stage-early">
+          <div class="sn-name">Stage 2: Early Adopters</div>
+          <div class="sn-desc">Next 10% of fleet by risk score. Broader hardware coverage.</div>
+          <div class="sn-pct">10% of fleet · 24hr hold</div>
+        </div>
+        <div class="stage-arrow">
+          <div class="sa-line"></div>
+          <div class="sa-label">failure rate &lt; 2%? promote ↓</div>
+          <div class="sa-line"></div>
+        </div>
+        <div class="stage-node stage-half">
+          <div class="sn-name">Stage 3: Majority</div>
+          <div class="sn-desc">50% of fleet. Stress tests infrastructure at scale.</div>
+          <div class="sn-pct">50% of fleet · 24hr hold</div>
+        </div>
+        <div class="stage-arrow">
+          <div class="sa-line"></div>
+          <div class="sa-label">failure rate &lt; 2%? promote ↓</div>
+          <div class="sa-line"></div>
+        </div>
+        <div class="stage-node stage-full">
+          <div class="sn-name">Stage 4: Full Fleet</div>
+          <div class="sn-desc">Remaining vehicles including higher-risk profiles.</div>
+          <div class="sn-pct">100% of fleet</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Auto-decision thresholds:</strong>
+        Failure rate &lt; 2% → auto-promote to next stage.
+        Failure rate 2-5% → PAUSE, alert engineering for investigation.
+        Failure rate &gt; 5% → STOP campaign, trigger rollback for affected vehicles.
+      </div>
+    </div>
+  </div>
+
+  <!-- ECU DEPENDENCY ORCHESTRATION -->
+  <div class="layer open" id="layer-dependency">
+    <div class="layer-header" onclick="toggleLayer('layer-dependency')">
+      <div class="layer-icon dependency">🔗</div>
+      <div class="layer-info">
+        <div class="layer-title">ECU Dependency Orchestration</div>
+        <div class="layer-sub">7-ECU dependency graph with topological ordering via NetworkX</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        ECUs must update in a specific order. You can't update the Perception ECU before the Gateway,
+        because Perception's new firmware expects Gateway APIs that only exist in the new version.
+        Updating Planning before Perception would break the data pipeline. The dependency graph
+        encodes these constraints, and NetworkX topological sort produces the correct flash sequence.
+      </p>
+
+      <div class="dep-graph">
+        <div class="dep-row">
+          <div class="dep-node dep-gateway">
+            <div class="dn-name">Gateway ECU</div>
+            <div class="dn-order">Order: 1 (root)</div>
+          </div>
+        </div>
+        <div class="dep-arrow">↓ depends on ↓</div>
+        <div class="dep-row">
+          <div class="dep-node dep-perception">
+            <div class="dn-name">Perception ECU</div>
+            <div class="dn-order">Order: 2</div>
+          </div>
+          <div class="dep-node dep-body">
+            <div class="dn-name">Body Control</div>
+            <div class="dn-order">Order: 2 (parallel)</div>
+          </div>
+        </div>
+        <div class="dep-arrow">↓</div>
+        <div class="dep-row">
+          <div class="dep-node dep-planning">
+            <div class="dn-name">Planning ECU</div>
+            <div class="dn-order">Order: 3</div>
+          </div>
+        </div>
+        <div class="dep-arrow">↓</div>
+        <div class="dep-row">
+          <div class="dep-node dep-vcu">
+            <div class="dn-name">Vehicle Control</div>
+            <div class="dn-order">Order: 4</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border); width: 100%;">
+          <div class="dep-row">
+            <div class="dep-node dep-independent">
+              <div class="dn-name">Telematics</div>
+              <div class="dn-order">Independent</div>
+            </div>
+            <div class="dep-node dep-independent">
+              <div class="dn-name">Infotainment</div>
+              <div class="dn-order">Independent</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Graph Engine</div>
+          <div class="value">NetworkX directed graph with topological sort</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Cycle Detection</div>
+          <div class="value">DAG validation rejects circular dependencies at campaign creation</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Parallel Flash</div>
+          <div class="value">Independent ECUs (Telematics, Infotainment) flash in parallel</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Order Enforcement</div>
+          <div class="value">Each ECU waits for its parent's success before starting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: ROLLBACK ENGINE -->
+  <div class="section-header" id="rollback">
+    <span class="section-num">03 /</span>
+    <h2>Rollback Engine</h2>
+  </div>
+
+  <p class="prose">
+    When an ECU flash fails mid-sequence, the rollback engine must decide: can the vehicle
+    safely run with a mix of old and new firmware, or does every previously-updated ECU need
+    to go back too? This is not a simple undo. It's a <strong>dependency-aware cascade decision</strong>
+    backed by a compatibility matrix and an ML-predicted rollback success probability.
+  </p>
+
+  <div class="layer open" id="layer-rollback">
+    <div class="layer-header" onclick="toggleLayer('layer-rollback')">
+      <div class="layer-icon rollback">⚠</div>
+      <div class="layer-info">
+        <div class="layer-title">Cascade Rollback Logic</div>
+        <div class="layer-sub">Compatibility check → single or cascade rollback → ML success prediction</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Example scenario: Gateway updated successfully to v3.0, Perception updated to v2.1,
+        Planning fails at 67%. The rollback engine checks the compatibility matrix:
+        can Gateway(v3.0) + Perception(v2.1) + Planning(v_old) coexist? If yes, only Planning
+        rolls back. If no, all three must cascade back to their previous versions.
+      </p>
+
+      <div class="rollback-box">
+        <div class="rb-title">Cascade Rollback Path</div>
+        <p>
+          1. Planning fails at 67% → rollback Planning to v_old.<br>
+          2. Check compatibility: Gateway(new) + Perception(new) + Planning(old) → <strong>INCOMPATIBLE</strong>.<br>
+          3. Cascade: roll back Perception to v_old, then Gateway to v_old.<br>
+          4. Reverse topological order: Planning → Perception → Gateway.<br>
+          5. Before each rollback, ML model predicts success probability.
+        </p>
+      </div>
+
+      <div class="success-box">
+        <div class="sb-title">ML Rollback Prediction</div>
+        <p>
+          Before executing each rollback step, a second XGBoost model predicts rollback success
+          probability. "Planning rollback: 91% predicted success." "Perception rollback: 78%,
+          call a technician." This enables the fleet manager to decide whether to attempt
+          automated rollback or dispatch field service.
+        </p>
+      </div>
+
+      <div class="detail-grid" style="margin-top: 1rem;">
+        <div class="detail-item">
+          <div class="label">Compatibility Matrix</div>
+          <div class="value">Per-ECU version pair compatibility table, checked before every rollback</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Rollback Order</div>
+          <div class="value">Reverse topological sort of the dependency graph</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Success Prediction</div>
+          <div class="value">XGBoost per-step success probability with SHAP explanation</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Fallback</div>
+          <div class="value">If ML predicts &lt; 70% success, flag for manual field service</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: FAILURE MODES -->
+  <div class="section-header" id="failures">
+    <span class="section-num">04 /</span>
+    <h2>Nine Failure Modes</h2>
+  </div>
+
+  <p class="prose">
+    Every failure mode that can occur in a real fleet OTA deployment is simulated and handled.
+    The system doesn't just detect these failures, it has a defined recovery path for each one.
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table class="fm-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Failure Mode</th>
+          <th>Detection</th>
+          <th>Recovery</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>F1</td>
+          <td>Download timeout</td>
+          <td>No progress for 120s</td>
+          <td>Retry with exponential backoff, switch to full image if delta</td>
+          <td><span class="severity-badge sev-medium">Medium</span></td>
+        </tr>
+        <tr>
+          <td>F2</td>
+          <td>Package corruption</td>
+          <td>SHA-256 hash mismatch</td>
+          <td>Re-download from UPTANE Image Repository, full integrity check</td>
+          <td><span class="severity-badge sev-high">High</span></td>
+        </tr>
+        <tr>
+          <td>F3</td>
+          <td>Flash write failure</td>
+          <td>Flash controller error code</td>
+          <td>Rollback to previous partition (A/B scheme), log DTC</td>
+          <td><span class="severity-badge sev-critical">Critical</span></td>
+        </tr>
+        <tr>
+          <td>F4</td>
+          <td>Boot failure after flash</td>
+          <td>ECU fails self-test within 30s</td>
+          <td>Boot from backup partition, cascade rollback check</td>
+          <td><span class="severity-badge sev-critical">Critical</span></td>
+        </tr>
+        <tr>
+          <td>F5</td>
+          <td>Self-test failure</td>
+          <td>Diagnostic routine 0x31 returns NOK</td>
+          <td>Rollback + flag for service, set DTC</td>
+          <td><span class="severity-badge sev-critical">Critical</span></td>
+        </tr>
+        <tr>
+          <td>F6</td>
+          <td>Dependency conflict</td>
+          <td>Compatibility matrix mismatch post-flash</td>
+          <td>Cascade rollback of dependent ECUs in reverse topological order</td>
+          <td><span class="severity-badge sev-critical">Critical</span></td>
+        </tr>
+        <tr>
+          <td>F7</td>
+          <td>Battery died mid-flash</td>
+          <td>Voltage drop below threshold</td>
+          <td>Resume from last checkpoint on next power cycle, verify partition</td>
+          <td><span class="severity-badge sev-critical">Critical</span></td>
+        </tr>
+        <tr>
+          <td>F8</td>
+          <td>Verification failure</td>
+          <td>UPTANE metadata signature invalid</td>
+          <td>Reject update, report to Director Repository, block retry</td>
+          <td><span class="severity-badge sev-high">High</span></td>
+        </tr>
+        <tr>
+          <td>F9</td>
+          <td>Vehicle drove away mid-flash</td>
+          <td>Ignition state change to RUN</td>
+          <td>Pause flash, resume on next park cycle, verify partial state</td>
+          <td><span class="severity-badge sev-high">High</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 5: REAL-TIME MONITORING -->
+  <div class="section-header" id="monitoring">
+    <span class="section-num">05 /</span>
+    <h2>Real-Time Fleet Monitoring</h2>
+  </div>
+
+  <div class="layer" id="layer-monitor">
+    <div class="layer-header" onclick="toggleLayer('layer-monitor')">
+      <div class="layer-icon monitor">📡</div>
+      <div class="layer-info">
+        <div class="layer-title">MQTT Fleet Monitor</div>
+        <div class="layer-sub">Live telemetry from every vehicle during rollout</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Every vehicle publishes update progress over MQTT during the flash sequence: download
+        percentage, flash progress, health checks, and failure events. The cloud monitor
+        aggregates these in real time and feeds the auto-decision engine.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Protocol</div>
+          <div class="value">MQTT 5.0 over TLS, QoS 1 for failure events</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Telemetry</div>
+          <div class="value">Download %, flash %, self-test result, battery SOC, connectivity type</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Decision Thresholds</div>
+          <div class="value">&lt; 2% fail → continue, 2-5% → pause, &gt; 5% → stop + rollback</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Alerting</div>
+          <div class="value">Immediate alert on any critical failure mode (F3-F7)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-cohort">
+    <div class="layer-header" onclick="toggleLayer('layer-cohort')">
+      <div class="layer-icon cohort">📈</div>
+      <div class="layer-info">
+        <div class="layer-title">A/B Cohort Comparison</div>
+        <div class="layer-sub">Statistical validation that the update improved outcomes</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        After rollout completes, the system compares the updated cohort against the control
+        cohort (vehicles that haven't updated yet) using t-test and Mann-Whitney U tests.
+        This produces a statistically validated report: "Boot time improved 12% (p &lt; 0.01),
+        sensor health: no regression, error rate: -8%." Auto-generated for engineering review.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Statistical Tests</div>
+          <div class="value">Independent t-test, Mann-Whitney U (non-parametric)</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Metrics Compared</div>
+          <div class="value">Boot time, error rate, sensor health, diagnostic fault count</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Significance</div>
+          <div class="value">p-value threshold &lt; 0.05 with confidence intervals</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Output</div>
+          <div class="value">Auto-generated report for engineering review and audit compliance</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: KEY DESIGN DECISIONS -->
+  <div class="section-header" id="decisions">
+    <span class="section-num">06 /</span>
+    <h2>Key Design Decisions</h2>
+  </div>
+
+  <div class="layer" id="layer-d1">
+    <div class="layer-header" onclick="toggleLayer('layer-d1')">
+      <div class="layer-icon decision">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why ML risk scoring and not just rules?</div>
+        <div class="layer-sub">Feature interactions, fleet-level learning, continuous improvement</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        A rule-based system can check "is battery above 60%?" but it can't learn that HW Rev 1
+        devices with declining battery SOC on cellular connections have a 4x higher failure rate than
+        the same hardware on WiFi. XGBoost captures these feature interactions automatically from
+        historical data. As the fleet grows and more updates are deployed, the model improves.
+        SHAP explainability means every prediction is transparent and auditable, not a black box.
+      </p>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-d2">
+    <div class="layer-header" onclick="toggleLayer('layer-d2')">
+      <div class="layer-icon decision">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why UPTANE and not a custom signing scheme?</div>
+        <div class="layer-sub">Automotive industry standard, attack-resistant design</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        UPTANE is the automotive industry's purpose-built OTA security framework. Its dual-repo
+        architecture (Image Repository + Director Repository) with role-based key hierarchy
+        protects against rollback attacks, freeze attacks, and mix-and-match attacks. A custom
+        signing scheme would need to solve all of these attack vectors from scratch. UPTANE has
+        been formally analysed and is adopted by major OEMs. For regulatory compliance and
+        cybersecurity audits, using an established framework is non-negotiable.
+      </p>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-d3">
+    <div class="layer-header" onclick="toggleLayer('layer-d3')">
+      <div class="layer-icon decision">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why dependency-aware rollback and not full fleet rollback?</div>
+        <div class="layer-sub">Minimise blast radius, preserve successful updates</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        A naive "rollback everything" approach wastes completed work and extends fleet downtime.
+        If Gateway and Perception updated successfully and only Planning failed, and the
+        compatibility matrix confirms Gateway(new) + Perception(new) + Planning(old) is safe,
+        there's no reason to touch Gateway and Perception. The dependency-aware approach only
+        rolls back what's necessary. When it does need to cascade, it follows the reverse of
+        the topological sort order to maintain consistency at every step.
+      </p>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-d4">
+    <div class="layer-header" onclick="toggleLayer('layer-d4')">
+      <div class="layer-icon decision">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why A/B cohort testing for firmware?</div>
+        <div class="layer-sub">Evidence-based validation, not assumption-based deployment</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        In web software, A/B testing is standard. In automotive OTA, most companies just push
+        and hope. The staged rollout naturally creates a control cohort (the vehicles that haven't
+        updated yet). Comparing updated vs control vehicles with statistical tests produces
+        objective evidence that the update improved performance. This is critical for regulatory
+        audits and for building engineering confidence in the OTA pipeline.
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 7: TECH STACK -->
+  <div class="section-header" id="stack">
+    <span class="section-num">07 /</span>
+    <h2>Tech Stack</h2>
+  </div>
+
+  <div class="detail-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 2rem;">
+    <div class="detail-item">
+      <div class="label">Risk Scoring</div>
+      <div class="value">XGBoost + SHAP</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Graph Engine</div>
+      <div class="value">NetworkX (topological sort)</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">API</div>
+      <div class="value">FastAPI (REST)</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Dashboard</div>
+      <div class="value">Streamlit</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Database</div>
+      <div class="value">PostgreSQL</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">ML Tracking</div>
+      <div class="value">MLflow</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">OTA Security</div>
+      <div class="value">UPTANE framework</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Fleet Telemetry</div>
+      <div class="value">MQTT (Mosquitto)</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Statistics</div>
+      <div class="value">SciPy (t-test, Mann-Whitney U)</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Infrastructure</div>
+      <div class="value">Docker + Compose</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">CI/CD</div>
+      <div class="value">GitHub Actions</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Fleet Sim</div>
+      <div class="value">5,000 vehicles, 7 ECUs each</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <a href="https://sahanagn.github.io/automotive-portfolio/">← Back to Portfolio</a>
+  <br><br>
+  &copy; 2025 Sahana N &middot; All rights reserved.
+  <br>
+  Project descriptions, architecture documentation, and written content are original work protected by copyright.
+</footer>
+
+<script>
+function toggleLayer(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
