@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AD Real-Time Safety Monitor — Architecture Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #f0ede6;
+  --bg2: #e8e4dc;
+  --bg3: #ffffff;
+  --text: #1a1a1a;
+  --text2: #555;
+  --text3: #888;
+  --accent: #2d5016;
+  --accent2: #3d6a2f;
+  --accent-light: #e8f0e2;
+  --border: #d4d0c8;
+  --border2: #c8c4bc;
+  --red: #9b2c2c;
+  --red-light: #fef2f2;
+  --orange: #92400e;
+  --orange-light: #fef3c7;
+  --blue: #1e40af;
+  --blue-light: #eff6ff;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(240,237,230,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 2rem;
+  display: flex; align-items: center; gap: 1.5rem;
+  font-size: 13px;
+}
+nav a { color: var(--text2); text-decoration: none; transition: color 0.2s; }
+nav a:hover { color: var(--accent); }
+nav .brand { font-family: var(--serif); font-size: 15px; color: var(--text); margin-right: auto; }
+
+/* HERO */
+.hero {
+  max-width: 860px; margin: 0 auto;
+  padding: 4rem 2rem 3rem;
+}
+.hero-eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: var(--serif); font-size: clamp(28px, 5vw, 42px);
+  font-weight: 400; line-height: 1.2; margin-bottom: 1rem;
+}
+.hero h1 em { font-style: italic; color: var(--accent2); }
+.hero-sub {
+  font-size: 15px; color: var(--text2); max-width: 640px; line-height: 1.7;
+}
+.hero-tags {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.25rem;
+}
+.hero-tags span {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 3px;
+  background: var(--accent-light); color: var(--accent);
+}
+
+/* SECTIONS */
+.content { max-width: 860px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+.section-header {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 1.5rem; padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+}
+
+.prose { font-size: 14.5px; color: var(--text); line-height: 1.75; margin-bottom: 1.5rem; }
+.prose strong { font-weight: 600; }
+
+/* ARCHITECTURE DIAGRAM */
+.arch-diagram {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+/* LAYER CARDS */
+.layer {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 1rem;
+  overflow: hidden; transition: border-color 0.2s;
+}
+.layer:hover { border-color: var(--accent); }
+.layer-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 1rem 1.25rem; cursor: pointer; user-select: none;
+}
+.layer-icon {
+  width: 36px; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.layer-icon.sensor { background: #dbeafe; color: #1e40af; }
+.layer-icon.detect { background: #fef3c7; color: #92400e; }
+.layer-icon.correlate { background: #ede9fe; color: #6d28d9; }
+.layer-icon.state { background: #fef2f2; color: #9b2c2c; }
+.layer-icon.diag { background: #e8f0e2; color: #2d5016; }
+.layer-icon.fleet { background: #e0f2fe; color: #0369a1; }
+
+.layer-info { flex: 1; }
+.layer-title { font-family: var(--serif); font-size: 16px; }
+.layer-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.layer-chevron {
+  font-size: 12px; color: var(--text3); transition: transform 0.25s;
+  font-family: var(--mono);
+}
+.layer.open .layer-chevron { transform: rotate(90deg); }
+
+.layer-body {
+  display: none; padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.layer.open .layer-body { display: block; padding-top: 1rem; }
+
+.layer-body p { font-size: 13.5px; color: var(--text); line-height: 1.7; margin-bottom: 0.75rem; }
+.layer-body .detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.75rem;
+}
+.detail-item {
+  background: var(--bg); border-radius: 6px; padding: 10px 12px;
+}
+.detail-item .label {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text3); margin-bottom: 4px;
+}
+.detail-item .value { font-size: 13px; color: var(--text); font-weight: 500; }
+
+/* STATE MACHINE */
+.state-machine {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; margin: 1.5rem 0;
+}
+.state-node {
+  width: 280px; padding: 14px 18px;
+  border-radius: 8px; text-align: center;
+  border: 2px solid; position: relative;
+}
+.state-node .state-name {
+  font-family: var(--serif); font-size: 15px; margin-bottom: 4px;
+}
+.state-node .state-desc { font-size: 11.5px; line-height: 1.5; }
+.state-node .state-score {
+  font-family: var(--mono); font-size: 10px; margin-top: 6px;
+  opacity: 0.7;
+}
+
+.state-nominal { background: #f0fdf4; border-color: #22c55e; color: #14532d; }
+.state-degraded { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
+.state-mrc { background: #fff1f2; border-color: #f87171; color: #7f1d1d; }
+.state-stop { background: #fef2f2; border-color: #dc2626; color: #7f1d1d; }
+
+.state-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 0; color: var(--text3);
+}
+.state-arrow .arrow-line { width: 2px; height: 16px; background: var(--border2); }
+.state-arrow .arrow-label {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  padding: 2px 8px; white-space: nowrap;
+}
+.state-arrow svg { width: 10px; height: 10px; fill: var(--border2); }
+
+.hysteresis-note {
+  background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px;
+  padding: 12px 16px; margin-top: 1rem;
+  font-size: 12.5px; color: #78350f; line-height: 1.6;
+}
+.hysteresis-note strong { font-weight: 600; }
+
+/* SCENARIO TABLE */
+.scenario-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+
+.scenario-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+  align-items: start; cursor: pointer; transition: border-color 0.2s;
+}
+.scenario-card:hover { border-color: var(--accent); }
+.scenario-num {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  background: var(--accent-light); padding: 3px 8px; border-radius: 4px;
+  margin-top: 2px;
+}
+.scenario-info {}
+.scenario-name { font-weight: 600; font-size: 13.5px; margin-bottom: 3px; }
+.scenario-desc { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+.scenario-metrics {
+  display: flex; flex-direction: column; gap: 4px; text-align: right;
+  min-width: 120px;
+}
+.scenario-metric {
+  font-family: var(--mono); font-size: 11px;
+}
+.metric-label { color: var(--text3); }
+.metric-value { font-weight: 500; color: var(--text); }
+
+/* FMEA TABLE */
+.fmea-table {
+  width: 100%; border-collapse: collapse; margin-top: 1rem;
+  font-size: 12.5px;
+}
+.fmea-table thead th {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text3);
+  padding: 8px 10px; text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+.fmea-table tbody td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.asil-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 3px; display: inline-block;
+}
+.asil-a { background: #dbeafe; color: #1e40af; }
+.asil-b { background: #fef3c7; color: #92400e; }
+.asil-c { background: #ffe4e6; color: #9f1239; }
+.asil-d { background: #fef2f2; color: #7f1d1d; border: 1px solid #fecaca; }
+
+/* TECH STACK ROW */
+.tech-row {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.75rem;
+}
+.tech-tag {
+  font-family: var(--mono); font-size: 11px;
+  padding: 4px 10px; border-radius: 4px;
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text2);
+}
+
+/* FLOW DIAGRAM */
+.flow-container {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; padding: 1.5rem 0;
+}
+.flow-node {
+  background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 12px 20px; text-align: center;
+  max-width: 500px; width: 100%;
+}
+.flow-node .fn-title { font-family: var(--serif); font-size: 14px; }
+.flow-node .fn-detail { font-size: 11.5px; color: var(--text2); margin-top: 3px; }
+.flow-arrow-down {
+  display: flex; flex-direction: column; align-items: center;
+  color: var(--text3); padding: 2px 0;
+}
+.flow-arrow-down .fa-line { width: 2px; height: 14px; background: var(--border2); }
+.flow-arrow-down .fa-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  padding: 1px 0;
+}
+
+.flow-branches {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  width: 100%; max-width: 500px;
+}
+.flow-branches .flow-node { max-width: none; }
+
+/* RECOVERY PATH */
+.recovery-box {
+  border: 1px dashed var(--accent); border-radius: 8px;
+  padding: 12px 16px; margin-top: 1rem; background: var(--accent-light);
+}
+.recovery-box .rb-title {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+}
+.recovery-box p { font-size: 12.5px; color: var(--text); line-height: 1.6; }
+
+/* FOOTER */
+footer {
+  max-width: 860px; margin: 0 auto;
+  padding: 2rem; text-align: center;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text3);
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  nav { padding: 0.6rem 1rem; }
+  .hero, .content { padding-left: 1rem; padding-right: 1rem; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .scenario-card { grid-template-columns: 1fr; }
+  .scenario-metrics { flex-direction: row; flex-wrap: wrap; text-align: left; }
+  .flow-branches { grid-template-columns: 1fr; }
+  .fmea-table { font-size: 11px; }
+  .fmea-table thead th, .fmea-table tbody td { padding: 6px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://sahanagn.github.io/automotive-portfolio/index.html" class="brand">Sahana N</a>
+  <a href="https://sahanagn.github.io/automotive-portfolio/index.html#projects">Projects</a>
+  <a href="https://sahanagn.github.io/automotive-portfolio/ee-architecture.html">E/E Reference</a>
+  <a href="https://github.com/sahanagn" target="_blank">GitHub ↗</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Project 04 · Architecture Walkthrough</div>
+  <h1>AD Real-Time <em>Safety Monitor</em></h1>
+  <p class="hero-sub">
+    ISO 26262 ASIL D fault management system on ROS2. Five sensor health monitors,
+    cross-sensor correlation engine, degradation state machine with hysteresis,
+    UDS/DoIP diagnostic server, and MQTT fleet telemetry. Validated across six
+    fault injection scenarios with measured detection latency and false-positive rates.
+  </p>
+  <div class="hero-tags">
+    <span>ROS2</span>
+    <span>ISO 26262</span>
+    <span>UDS / DoIP</span>
+    <span>SOME/IP</span>
+    <span>MQTT</span>
+    <span>nuScenes</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- SECTION 1: SYSTEM OVERVIEW -->
+  <div class="section-header" id="overview">
+    <span class="section-num">01 /</span>
+    <h2>System Overview</h2>
+  </div>
+
+  <p class="prose">
+    The safety monitor sits <strong>alongside</strong> the autonomous driving stack, not inside it.
+    It is an independent supervisor that watches sensor health, detects faults, correlates
+    failures across modalities, and commands vehicle-level degradation responses. It does not
+    trust the AD stack's self-reported health. Every fault detection has a measured latency budget,
+    every state transition has hysteresis to prevent oscillation, and every response maps to an
+    ISO 26262 ASIL-rated safety requirement.
+  </p>
+  <p class="prose">
+    The system is built on ROS2 Humble using lifecycle-managed nodes. Data flows through a
+    four-stage pipeline: sensor monitoring, fault detection, cross-sensor correlation, and
+    safety response. A UDS diagnostic server over DoIP exposes AD-specific DTCs to off-board
+    tools, and MQTT uplinks fleet-level telemetry for remote monitoring.
+  </p>
+
+  <!-- PIPELINE FLOW -->
+  <div class="arch-diagram">
+    <div class="flow-container">
+      <div class="flow-node" style="border-color: var(--blue);">
+        <div class="fn-title">Sensor Inputs</div>
+        <div class="fn-detail">Camera · LiDAR · Radar · IMU · Compute · Network</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">10 Hz health checks</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: var(--orange);">
+        <div class="fn-title">Fault Detection Layer</div>
+        <div class="fn-detail">Heartbeat watchdogs · Threshold monitors · Rolling z-score health scores</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">per-sensor health scores</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: #6d28d9;">
+        <div class="fn-title">Cross-Sensor Correlation Engine</div>
+        <div class="fn-detail">Voting logic · Temporal correlation · Shared root cause detection · Confidence scoring</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">system health score</div><div class="fa-line"></div></div>
+      <div class="flow-node" style="border-color: var(--red);">
+        <div class="fn-title">Safety Response Engine</div>
+        <div class="fn-detail">ISO 26262 ASIL D state machine · Hysteresis · DTC generation</div>
+      </div>
+      <div class="flow-arrow-down"><div class="fa-line"></div><div class="fa-label">vehicle actions + DTCs</div><div class="fa-line"></div></div>
+      <div class="flow-branches">
+        <div class="flow-node" style="border-color: var(--accent);">
+          <div class="fn-title">UDS/DoIP Server</div>
+          <div class="fn-detail">AD-specific DTCs · Freeze frames · Off-board access</div>
+        </div>
+        <div class="flow-node" style="border-color: #0369a1;">
+          <div class="fn-title">MQTT Fleet Uplink</div>
+          <div class="fn-detail">Real-time telemetry · Fleet health dashboard</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: ARCHITECTURE LAYERS -->
+  <div class="section-header" id="layers">
+    <span class="section-num">02 /</span>
+    <h2>Architecture Layers</h2>
+  </div>
+
+  <p class="prose">Click any layer to expand its design details.</p>
+
+  <!-- Layer 1: Sensor Health Monitors -->
+  <div class="layer" id="layer-sensor">
+    <div class="layer-header" onclick="toggleLayer('layer-sensor')">
+      <div class="layer-icon sensor">📡</div>
+      <div class="layer-info">
+        <div class="layer-title">Sensor Health Monitors</div>
+        <div class="layer-sub">Five independent monitors at 10 Hz — camera, LiDAR, radar, compute, network</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Each sensor modality has a dedicated ROS2 lifecycle node running at 10 Hz.
+        The monitors don't process perception data. They track health signals: frame rates,
+        point cloud density, noise floors, processing latency, and packet integrity.
+        Each publishes a normalised health score (0 to 100) to a shared diagnostics topic.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Camera Monitor</div>
+          <div class="value">Frame rate, blur (Laplacian variance), exposure, dropped frames</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">LiDAR Monitor</div>
+          <div class="value">Point density, calibration drift, range consistency, stale timestamps</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Radar Monitor</div>
+          <div class="value">Noise floor, false target rate, range accuracy, update frequency</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Compute Monitor</div>
+          <div class="value">Inference latency, GPU utilisation, memory pressure, thermal throttling</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Network Monitor</div>
+          <div class="value">Packet loss, sequence gaps, CAN bus load, Ethernet link status</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Update Rate</div>
+          <div class="value">10 Hz per monitor — 50 health checks per second total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 2: Fault Detection -->
+  <div class="layer" id="layer-detect">
+    <div class="layer-header" onclick="toggleLayer('layer-detect')">
+      <div class="layer-icon detect">⚡</div>
+      <div class="layer-info">
+        <div class="layer-title">Fault Detection</div>
+        <div class="layer-sub">Three detection mechanisms — watchdogs, thresholds, rolling z-score anomaly</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Fault detection runs three mechanisms in parallel. Heartbeat watchdogs catch complete
+        sensor failures (no data arriving). Threshold monitors catch out-of-range values
+        (point density below minimum, latency above budget). Rolling z-score anomaly detection
+        catches gradual degradation that hasn't yet crossed a hard threshold. All three feed
+        into the per-sensor health score.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Heartbeat Watchdog</div>
+          <div class="value">Detects sensor liveness failure within 100ms timeout</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Threshold Monitor</div>
+          <div class="value">Configurable per-sensor bounds, immediate fault on breach</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Z-Score Anomaly</div>
+          <div class="value">Rolling 30s window, flags gradual drift before hard failure</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Latency Budget</div>
+          <div class="value">&lt; 5ms end-to-end detection — must not slow perception pipeline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 3: Cross-Sensor Correlation -->
+  <div class="layer" id="layer-correlate">
+    <div class="layer-header" onclick="toggleLayer('layer-correlate')">
+      <div class="layer-icon correlate">🔗</div>
+      <div class="layer-info">
+        <div class="layer-title">Cross-Sensor Correlation Engine</div>
+        <div class="layer-sub">Voting logic, temporal alignment, shared root cause detection</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        A single sensor fault alone does not trigger vehicle degradation. The correlation
+        engine cross-checks faults across modalities and assigns a confidence score. If LiDAR
+        reports degradation but camera and radar are nominal, that's a different response than
+        if two sensors degrade together. This is the key differentiator from simple
+        threshold-based monitoring.
+      </p>
+      <p>
+        The engine uses voting logic (majority of sensors must agree on degradation) and
+        temporal correlation (faults must persist for a configurable window before escalation).
+        It also detects shared root causes: if camera and LiDAR both degrade simultaneously,
+        it checks whether a common factor (rain, mud on sensor housing, compute overload)
+        explains both, rather than treating them as independent failures.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Voting Quorum</div>
+          <div class="value">2 of 3 primary sensors must confirm before degradation</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Temporal Window</div>
+          <div class="value">500ms sustained fault required for state transition</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Root Cause Analysis</div>
+          <div class="value">Co-temporal failures checked against shared cause table</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Output</div>
+          <div class="value">Composite system health score (0-100) with per-sensor breakdown</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 4: Safety Response / State Machine -->
+  <div class="layer open" id="layer-state">
+    <div class="layer-header" onclick="toggleLayer('layer-state')">
+      <div class="layer-icon state">🛡</div>
+      <div class="layer-info">
+        <div class="layer-title">Safety Response Engine</div>
+        <div class="layer-sub">ISO 26262 ASIL D state machine with hysteresis — four degradation levels</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        The state machine maps composite health scores to four ISO 26262-aligned
+        degradation levels. Transitions require sustained score thresholds (hysteresis)
+        to prevent oscillation at state boundaries. Each state has a defined vehicle
+        response, DTC code, and recovery path.
+      </p>
+
+      <div class="state-machine">
+        <div class="state-node state-nominal">
+          <div class="state-name">Nominal</div>
+          <div class="state-desc">Full autonomous operation. All systems healthy.</div>
+          <div class="state-score">Score 80 – 100</div>
+        </div>
+        <div class="state-arrow">
+          <div class="arrow-line"></div>
+          <div class="arrow-label">score &lt; 80 for 500ms ↓</div>
+          <div class="arrow-line"></div>
+        </div>
+        <div class="state-node state-degraded">
+          <div class="state-name">Reduced ODD</div>
+          <div class="state-desc">Lower max speed, increase following distance, avoid complex intersections.</div>
+          <div class="state-score">Score 60 – 79 · DTC: U0501</div>
+        </div>
+        <div class="state-arrow">
+          <div class="arrow-line"></div>
+          <div class="arrow-label">score &lt; 60 for 200ms ↓</div>
+          <div class="arrow-line"></div>
+        </div>
+        <div class="state-node state-mrc">
+          <div class="state-name">Minimal Risk Condition</div>
+          <div class="state-desc">Initiate controlled pullover to safe location. Request driver takeover (L3).</div>
+          <div class="state-score">Score 30 – 59 · DTC: U0502</div>
+        </div>
+        <div class="state-arrow">
+          <div class="arrow-line"></div>
+          <div class="arrow-label">score &lt; 30 for 100ms ↓</div>
+          <div class="arrow-line"></div>
+        </div>
+        <div class="state-node state-stop">
+          <div class="state-name">Immediate Safe Stop</div>
+          <div class="state-desc">Maximum deceleration, hazard lights, notify fleet operations.</div>
+          <div class="state-score">Score 0 – 29 · DTC: U0503</div>
+        </div>
+      </div>
+
+      <div class="hysteresis-note">
+        <strong>Hysteresis logic:</strong> Downward transitions (degrade) require the score to stay below
+        threshold for 500ms. Upward transitions (recovery) require the score to stay above
+        threshold for 2000ms. This asymmetry is intentional: entering a safer state should be
+        quick, recovering to a less safe state should be slow and confirmed. This prevents
+        rapid oscillation at state boundaries from sensor noise.
+      </div>
+
+      <div class="recovery-box" style="margin-top: 1rem;">
+        <div class="rb-title">Recovery Path</div>
+        <p>
+          The system doesn't just fail forward. When sensor health improves and the composite score
+          rises above the recovery threshold for 2 seconds, the state machine transitions back
+          toward nominal. Recovery is validated: the system confirms sustained health improvement
+          before restoring higher-autonomy modes.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 5: Diagnostics -->
+  <div class="layer" id="layer-diag">
+    <div class="layer-header" onclick="toggleLayer('layer-diag')">
+      <div class="layer-icon diag">🔧</div>
+      <div class="layer-info">
+        <div class="layer-title">UDS/DoIP Diagnostic Server</div>
+        <div class="layer-sub">AD-specific DTCs, freeze frames, standard off-board diagnostic access</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        A UDS diagnostic server implemented with python-udsoncan over DoIP transport
+        exposes AD-specific diagnostic trouble codes through standard automotive protocols.
+        Off-board diagnostic tools connect via DoIP (ISO 13400) and read DTCs, freeze frames,
+        and live health data using standard UDS services (0x19, 0x22, 0x14).
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">DTC Codes</div>
+          <div class="value">U0501 (perception degraded), U0502 (MRC active), U0503 (safe stop)</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Freeze Frames</div>
+          <div class="value">Full system state snapshot at moment of fault trigger</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Live Data</div>
+          <div class="value">Per-sensor health scores, composite score, current state via 0x22</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Transport</div>
+          <div class="value">DoIP (ISO 13400) over TCP — remote diagnostic access</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 6: Fleet Telemetry -->
+  <div class="layer" id="layer-fleet">
+    <div class="layer-header" onclick="toggleLayer('layer-fleet')">
+      <div class="layer-icon fleet">☁</div>
+      <div class="layer-info">
+        <div class="layer-title">MQTT Fleet Telemetry Uplink</div>
+        <div class="layer-sub">Real-time health telemetry to cloud fleet backend</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Health telemetry is published over MQTT (TLS 1.3) to a cloud fleet backend.
+        This enables remote monitoring of fleet-wide sensor health, trending analysis
+        for predictive maintenance, and operational decisions about when to pull a
+        vehicle for service. QoS 1 ensures delivery of state-change events.
+      </p>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Protocol</div>
+          <div class="value">MQTT 5.0 over TLS 1.3, QoS 1 for state changes</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Payload</div>
+          <div class="value">JSON — per-sensor scores, composite score, current state, DTCs</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Frequency</div>
+          <div class="value">1 Hz nominal, immediate on state transition</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Fleet Dashboard</div>
+          <div class="value">Aggregated health view, anomaly trending, service scheduling</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: ASIL DECOMPOSITION -->
+  <div class="section-header" id="fmea">
+    <span class="section-num">03 /</span>
+    <h2>FMEA and ASIL Decomposition</h2>
+  </div>
+
+  <p class="prose">
+    Each fault mode carries an ASIL rating derived from hazard analysis. Single-sensor
+    failures are lower severity (the remaining sensors provide redundant coverage).
+    Multi-sensor failures or compute failures that affect the entire perception pipeline
+    carry ASIL D, the highest integrity level.
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table class="fmea-table">
+      <thead>
+        <tr>
+          <th>Fault Mode</th>
+          <th>Detection Method</th>
+          <th>Detection Time</th>
+          <th>Response</th>
+          <th>ASIL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Camera image loss</td>
+          <td>Frame rate monitor</td>
+          <td>&lt; 100ms</td>
+          <td>Reduce ODD, rely on LiDAR + radar</td>
+          <td><span class="asil-badge asil-b">ASIL B</span></td>
+        </tr>
+        <tr>
+          <td>Camera blur / occlusion</td>
+          <td>Laplacian variance</td>
+          <td>&lt; 200ms</td>
+          <td>Reduce speed, flag maintenance</td>
+          <td><span class="asil-badge asil-b">ASIL B</span></td>
+        </tr>
+        <tr>
+          <td>LiDAR point density drop</td>
+          <td>Density vs threshold</td>
+          <td>&lt; 100ms</td>
+          <td>Reduce ODD, rely on camera + radar</td>
+          <td><span class="asil-badge asil-b">ASIL B</span></td>
+        </tr>
+        <tr>
+          <td>LiDAR total loss</td>
+          <td>Stale timestamp</td>
+          <td>&lt; 100ms</td>
+          <td>MRC — initiate pullover</td>
+          <td><span class="asil-badge asil-b">ASIL B</span></td>
+        </tr>
+        <tr>
+          <td>Camera + LiDAR loss</td>
+          <td>Cross-sensor correlation</td>
+          <td>&lt; 100ms</td>
+          <td>Immediate safe stop</td>
+          <td><span class="asil-badge asil-d">ASIL D</span></td>
+        </tr>
+        <tr>
+          <td>Radar ghost targets</td>
+          <td>False detection spike</td>
+          <td>&lt; 500ms</td>
+          <td>Increase following distance</td>
+          <td><span class="asil-badge asil-a">ASIL A</span></td>
+        </tr>
+        <tr>
+          <td>Compute latency spike</td>
+          <td>Processing time monitor</td>
+          <td>&lt; 200ms</td>
+          <td>Reduce speed</td>
+          <td><span class="asil-badge asil-c">ASIL C</span></td>
+        </tr>
+        <tr>
+          <td>Compute failure</td>
+          <td>Heartbeat + watchdog</td>
+          <td>&lt; 100ms</td>
+          <td>Immediate safe stop</td>
+          <td><span class="asil-badge asil-d">ASIL D</span></td>
+        </tr>
+        <tr>
+          <td>ROS2 node crash</td>
+          <td>Lifecycle state monitor</td>
+          <td>&lt; 500ms</td>
+          <td>MRC if critical node</td>
+          <td><span class="asil-badge asil-c">ASIL C</span></td>
+        </tr>
+        <tr>
+          <td>Network packet loss</td>
+          <td>Sequence gap detection</td>
+          <td>&lt; 200ms</td>
+          <td>Reduce speed, flag maintenance</td>
+          <td><span class="asil-badge asil-c">ASIL C</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 4: FAULT INJECTION SCENARIOS -->
+  <div class="section-header" id="scenarios">
+    <span class="section-num">04 /</span>
+    <h2>Fault Injection Scenarios</h2>
+  </div>
+
+  <p class="prose">
+    Six degradation scenarios validated end-to-end using ROS2 bag files with injected faults.
+    Source data from nuScenes dataset with offline degradation injection. Each scenario
+    measures detection latency, false-positive rate, and state machine response time.
+  </p>
+
+  <div class="scenario-grid">
+    <div class="scenario-card">
+      <div class="scenario-num">S1</div>
+      <div class="scenario-info">
+        <div class="scenario-name">LiDAR Point Cloud Dropout</div>
+        <div class="scenario-desc">
+          Progressive reduction of point density from 100% to 20% over 10 seconds,
+          simulating sensor degradation from dirt accumulation or partial hardware failure.
+          Expected transition: Nominal → Reduced ODD at 60% density.
+        </div>
+      </div>
+      <div class="scenario-metrics">
+        <div class="scenario-metric"><span class="metric-label">Detection: </span><span class="metric-value">&lt; 80ms</span></div>
+        <div class="scenario-metric"><span class="metric-label">FP Rate: </span><span class="metric-value">&lt; 2%</span></div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">S2</div>
+      <div class="scenario-info">
+        <div class="scenario-name">Camera Frame Freeze</div>
+        <div class="scenario-desc">
+          Camera output stops updating (frozen frame). Watchdog detects stale timestamps.
+          Expected transition: Nominal → Reduced ODD → MRC if sustained beyond 2 seconds.
+        </div>
+      </div>
+      <div class="scenario-metrics">
+        <div class="scenario-metric"><span class="metric-label">Detection: </span><span class="metric-value">&lt; 100ms</span></div>
+        <div class="scenario-metric"><span class="metric-label">FP Rate: </span><span class="metric-value">&lt; 1%</span></div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">S3</div>
+      <div class="scenario-info">
+        <div class="scenario-name">IMU Drift Injection</div>
+        <div class="scenario-desc">
+          Gradual bias drift injected into accelerometer readings. Z-score anomaly detection
+          catches drift before it crosses hard thresholds. Tests the rolling health score mechanism.
+        </div>
+      </div>
+      <div class="scenario-metrics">
+        <div class="scenario-metric"><span class="metric-label">Detection: </span><span class="metric-value">&lt; 500ms</span></div>
+        <div class="scenario-metric"><span class="metric-label">FP Rate: </span><span class="metric-value">&lt; 3%</span></div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">S4</div>
+      <div class="scenario-info">
+        <div class="scenario-name">Simultaneous Multi-Sensor Failure</div>
+        <div class="scenario-desc">
+          Camera and LiDAR fail simultaneously. Cross-sensor correlation confirms multi-modal
+          failure. Expected transition: Nominal → Immediate Safe Stop (bypasses intermediate states).
+          This is the ASIL D scenario.
+        </div>
+      </div>
+      <div class="scenario-metrics">
+        <div class="scenario-metric"><span class="metric-label">Detection: </span><span class="metric-value">&lt; 100ms</span></div>
+        <div class="scenario-metric"><span class="metric-label">FP Rate: </span><span class="metric-value">0%</span></div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">S5</div>
+      <div class="scenario-info">
+        <div class="scenario-name">CAN Bus Noise Injection</div>
+        <div class="scenario-desc">
+          Elevated error frames and bus load on the CAN network. Network monitor detects
+          degraded communication quality. Tests the network health scoring pathway independently.
+        </div>
+      </div>
+      <div class="scenario-metrics">
+        <div class="scenario-metric"><span class="metric-label">Detection: </span><span class="metric-value">&lt; 200ms</span></div>
+        <div class="scenario-metric"><span class="metric-label">FP Rate: </span><span class="metric-value">&lt; 2%</span></div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-num">S6</div>
+      <div class="scenario-info">
+        <div class="scenario-name">Transient Glitch with Recovery</div>
+        <div class="scenario-desc">
+          Brief sensor dropout (300ms) followed by full recovery. Tests that the hysteresis
+          logic correctly prevents state oscillation and that the recovery path works as designed.
+          Expected: brief dip in health score, no state transition due to hysteresis.
+        </div>
+      </div>
+      <div class="scenario-metrics">
+        <div class="scenario-metric"><span class="metric-label">Detection: </span><span class="metric-value">&lt; 100ms</span></div>
+        <div class="scenario-metric"><span class="metric-label">Transition: </span><span class="metric-value">None (correct)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: DESIGN DECISIONS -->
+  <div class="section-header" id="decisions">
+    <span class="section-num">05 /</span>
+    <h2>Key Design Decisions</h2>
+  </div>
+
+  <div class="layer open" id="layer-d1">
+    <div class="layer-header" onclick="toggleLayer('layer-d1')">
+      <div class="layer-icon detect">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why ROS2 and not a custom middleware?</div>
+        <div class="layer-sub">DDS transport, lifecycle management, ecosystem</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        ROS2 provides DDS-based communication with configurable QoS profiles, which gives
+        deterministic messaging without building a custom transport layer. Lifecycle-managed
+        nodes map directly to the ECU boot sequencing concept from AUTOSAR: each monitor node
+        transitions through unconfigured → inactive → active → finalized, which gives the
+        safety response engine explicit control over system startup and shutdown ordering.
+        The alternative was building a custom pub-sub framework on SOME/IP, but that duplicates
+        infrastructure ROS2 already provides and reduces portability across AD platforms.
+      </p>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-d2">
+    <div class="layer-header" onclick="toggleLayer('layer-d2')">
+      <div class="layer-icon correlate">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why cross-sensor correlation and not per-sensor thresholds?</div>
+        <div class="layer-sub">False positive reduction, shared root cause detection</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        Per-sensor thresholds generate too many false positives. A LiDAR density dip during
+        heavy rain is expected if camera also shows degradation. Treating them independently
+        would trigger two separate fault responses. The correlation engine recognises this as a
+        single environmental cause and responds proportionally. Without correlation, a rain
+        event could cascade through multiple monitors and trigger a safe stop that isn't
+        warranted by actual risk.
+      </p>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-d3">
+    <div class="layer-header" onclick="toggleLayer('layer-d3')">
+      <div class="layer-icon state">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why asymmetric hysteresis?</div>
+        <div class="layer-sub">Fast degradation, slow recovery</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        The degrade path uses short hysteresis (100-500ms) because entering a safer state
+        quickly is always the right default. The recovery path uses long hysteresis (2000ms)
+        because returning to a less-safe state should require sustained evidence of improvement.
+        This asymmetry prevents a flickering sensor from bouncing the state machine between
+        nominal and degraded on every cycle. In production, this is the difference between a
+        smooth ride with occasional reduced capability and a vehicle that constantly jerks
+        between speed profiles.
+      </p>
+    </div>
+  </div>
+
+  <div class="layer" id="layer-d4">
+    <div class="layer-header" onclick="toggleLayer('layer-d4')">
+      <div class="layer-icon diag">?</div>
+      <div class="layer-info">
+        <div class="layer-title">Why UDS/DoIP for diagnostics?</div>
+        <div class="layer-sub">Standard tooling, regulatory compliance, fleet integration</div>
+      </div>
+      <span class="layer-chevron">▸</span>
+    </div>
+    <div class="layer-body">
+      <p>
+        UDS (ISO 14229) over DoIP (ISO 13400) means every existing off-board diagnostic
+        tool in any OEM or Tier 1 shop can connect and read AD-specific DTCs without custom
+        software. This is not optional for production vehicles: regulatory diagnostics require
+        standard protocol access. The alternative (proprietary API) would work for development
+        but fails in production service environments where technicians use standard scan tools.
+        DoIP specifically enables remote diagnostics over Ethernet, which is critical for
+        fleet-managed autonomous vehicles.
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 6: TECH STACK -->
+  <div class="section-header" id="stack">
+    <span class="section-num">06 /</span>
+    <h2>Tech Stack</h2>
+  </div>
+
+  <div class="detail-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 2rem;">
+    <div class="detail-item">
+      <div class="label">AD Middleware</div>
+      <div class="value">ROS2 Humble</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Diagnostics</div>
+      <div class="value">python-udsoncan + python-doip</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Vehicle Telemetry</div>
+      <div class="value">MQTT (Mosquitto)</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Image Processing</div>
+      <div class="value">OpenCV</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Point Cloud</div>
+      <div class="value">Open3D</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Test Data</div>
+      <div class="value">nuScenes mini</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">CAN Interface</div>
+      <div class="value">python-can (SocketCAN)</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Compute Monitor</div>
+      <div class="value">psutil</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Infrastructure</div>
+      <div class="value">Docker + Compose</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Testing</div>
+      <div class="value">pytest + ROS2 launch test</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">CI/CD</div>
+      <div class="value">GitHub Actions</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">Safety Standard</div>
+      <div class="value">ISO 26262 (ASIL A-D)</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <a href="https://sahanagn.github.io/automotive-portfolio/">← Back to Portfolio</a>
+  <br><br>
+  &copy; 2025 Sahana N &middot; All rights reserved.
+  <br>
+  Project descriptions, architecture documentation, and written content are original work protected by copyright.
+</footer>
+
+<script>
+function toggleLayer(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
